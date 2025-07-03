@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "name": "TheCodeCup",
+    "slug": "thecodecup",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "splash": {
+      "backgroundColor": "#ffffff"
+    },
+    "android": {
+      "permissions": []
+    },
+    "ios": {
+      "supportsTablet": true
+    }
+  }
+}
