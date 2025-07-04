@@ -7,11 +7,24 @@
     "splash": {
       "backgroundColor": "#ffffff"
     },
+    "plugins": [
+      "@react-native-async-storage/async-storage"
+    ],
     "android": {
-      "permissions": []
+      "permissions": [
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_EXTERNAL_STORAGE"
+      ]
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.codecup.app"
+    },
+    "extra": {
+      "storageConfig": {
+        "enableFallback": true,
+        "retryAttempts": 3
+      }
     }
   }
 }

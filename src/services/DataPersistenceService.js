@@ -15,22 +15,39 @@ const STORAGE_KEYS = {
 };
 
 class DataPersistenceService {
-  // Generic storage methods
+  constructor() {
+    this.retryAttempts = 2;
+    this.retryDelay = 500; // ms
+  }
+
+  // Generic storage methods with retry logic
   async setItem(key, value) {
-    try {
-      const result = await robustStorage.setItem(key, value);
-      if (result.success) {
-        // Only log in development mode to reduce noise
-        if (__DEV__ && result.method !== 'AsyncStorage') {
-          console.log(`💾 ${key} saved using ${result.method}`);
+    for (let attempt = 1; attempt <= this.retryAttempts; attempt++) {
+      try {
+        const result = await robustStorage.setItem(key, value);
+        if (result.success) {
+          // Only log in development mode to reduce noise
+          if (__DEV__ && result.method !== 'AsyncStorage') {
+            console.log(`💾 ${key} saved using ${result.method} (attempt ${attempt})`);
+          }
+          return true;
         }
-        return true;
+        
+        if (attempt < this.retryAttempts) {
+          console.warn(`Retry ${attempt} for ${key} failed, attempting again...`);
+          await new Promise(resolve => setTimeout(resolve, this.retryDelay));
+        }
+      } catch (error) {
+        console.error(`Storage operation failed for ${key} (attempt ${attempt}):`, error);
+        
+        if (attempt < this.retryAttempts) {
+          await new Promise(resolve => setTimeout(resolve, this.retryDelay));
+        }
       }
-      return false;
-    } catch (error) {
-      console.error(`Storage operation failed for ${key}:`, error);
-      return false;
     }
+    
+    console.error(`All ${this.retryAttempts} attempts failed for ${key}`);
+    return false;
   }
 
   async getItem(key, defaultValue = null) {

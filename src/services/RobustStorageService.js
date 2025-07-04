@@ -6,35 +6,52 @@ class RobustStorageService {
     this.isAsyncStorageAvailable = null;
     this.memoryStore = new Map();
     this.storageType = 'unknown';
+    this.retryAttempts = 3;
+    this.retryDelay = 100; // ms
   }
 
-  // Test AsyncStorage availability
+  // Test AsyncStorage availability with multiple attempts and better error handling
   async testAsyncStorage() {
     if (this.isAsyncStorageAvailable !== null) {
       return this.isAsyncStorageAvailable;
     }
 
-    try {
-      const testKey = '@CodeCup:test';
-      const testValue = 'test';
-      
-      await AsyncStorage.setItem(testKey, testValue);
-      const retrieved = await AsyncStorage.getItem(testKey);
-      await AsyncStorage.removeItem(testKey);
-      
-      if (retrieved === testValue) {
-        this.isAsyncStorageAvailable = true;
-        this.storageType = 'AsyncStorage';
-        console.log('✅ AsyncStorage is working correctly');
-        return true;
+    for (let attempt = 1; attempt <= this.retryAttempts; attempt++) {
+      try {
+        const testKey = '@CodeCup:test_' + Date.now();
+        const testValue = 'test_' + attempt;
+        
+        // Add timeout for the test
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('AsyncStorage test timeout')), 5000)
+        );
+        
+        const testPromise = (async () => {
+          await AsyncStorage.setItem(testKey, testValue);
+          const retrieved = await AsyncStorage.getItem(testKey);
+          await AsyncStorage.removeItem(testKey);
+          return retrieved;
+        })();
+        
+        const retrieved = await Promise.race([testPromise, timeoutPromise]);
+        
+        if (retrieved === testValue) {
+          this.isAsyncStorageAvailable = true;
+          this.storageType = 'AsyncStorage';
+          console.log(`✅ AsyncStorage is working correctly (attempt ${attempt})`);
+          return true;
+        }
+      } catch (error) {
+        console.warn(`⚠️ AsyncStorage test attempt ${attempt} failed:`, error.message);
+        if (attempt < this.retryAttempts) {
+          await new Promise(resolve => setTimeout(resolve, this.retryDelay * attempt));
+        }
       }
-    } catch (error) {
-      console.warn('⚠️ AsyncStorage test failed:', error.message);
     }
 
     this.isAsyncStorageAvailable = false;
     this.storageType = 'MemoryStorage';
-    console.log('📝 Using memory storage fallback');
+    console.log('📝 Using memory storage fallback after all attempts failed');
     return false;
   }
 
@@ -129,12 +146,41 @@ class RobustStorageService {
     }
   }
 
-  getStorageInfo() {
-    return {
+  // Force re-test of AsyncStorage (useful for debugging and recovery)
+  async retestAsyncStorage() {
+    this.isAsyncStorageAvailable = null;
+    this.storageType = 'unknown';
+    const result = await this.testAsyncStorage();
+    
+    if (result) {
+      console.log('🔄 AsyncStorage retest successful - switched to persistent storage');
+    } else {
+      console.log('🔄 AsyncStorage retest failed - remaining on memory storage');
+    }
+    
+    return result;
+  }
+
+  // Health check method for monitoring storage status
+  async getStorageHealth() {
+    const healthInfo = {
       type: this.storageType,
       isAsyncStorageAvailable: this.isAsyncStorageAvailable,
-      memoryStoreSize: this.memoryStore.size
+      memoryStoreSize: this.memoryStore.size,
+      lastTestedAt: new Date().toISOString()
     };
+
+    // If using memory storage, try to retest AsyncStorage periodically
+    if (this.storageType === 'MemoryStorage') {
+      try {
+        const retestResult = await this.retestAsyncStorage();
+        healthInfo.retestSuccessful = retestResult;
+      } catch (error) {
+        healthInfo.retestError = error.message;
+      }
+    }
+
+    return healthInfo;
   }
 }
 
