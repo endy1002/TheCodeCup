@@ -1,10 +1,13 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function CoffeeCard({ coffee, onPress }) {
+  const { theme } = useTheme();
+  
   return (
-    <TouchableOpacity style={styles.card} onPress={() => onPress(coffee)}>
-      <View style={styles.imageContainer}>
+    <TouchableOpacity style={[styles.card, { backgroundColor: theme.surface, shadowColor: theme.shadow }]} onPress={() => onPress(coffee)}>
+      <View style={[styles.imageContainer, { backgroundColor: theme.inputBackground }]}>
         {coffee.image ? (
           <Image source={coffee.image} style={styles.coffeeImage} />
         ) : (
@@ -12,10 +15,10 @@ export default function CoffeeCard({ coffee, onPress }) {
         )}
       </View>
       <View style={styles.content}>
-        <Text style={styles.name}>{coffee.name}</Text>
-        <Text style={styles.description}>{coffee.description}</Text>
-        <Text style={styles.category}>{coffee.category}</Text>
-        <Text style={styles.price}>${coffee.price.toFixed(2)}</Text>
+        <Text style={[styles.name, { color: theme.text }]}>{coffee.name}</Text>
+        <Text style={[styles.description, { color: theme.textSecondary }]}>{coffee.description}</Text>
+        <Text style={[styles.category, { color: theme.textMuted }]}>{coffee.category}</Text>
+        <Text style={[styles.price, { color: theme.primary }]}>${coffee.price.toFixed(2)}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -24,12 +27,10 @@ export default function CoffeeCard({ coffee, onPress }) {
 const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
     marginHorizontal: 16,
     marginVertical: 8,
     borderRadius: 12,
     padding: 16,
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -39,7 +40,6 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 8,
-    backgroundColor: '#f5f5f5',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
@@ -60,23 +60,19 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
     marginBottom: 4,
   },
   description: {
     fontSize: 14,
-    color: '#666',
     marginBottom: 4,
   },
   category: {
     fontSize: 12,
-    color: '#8B4513',
     fontWeight: '600',
     marginBottom: 8,
   },
   price: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#2E8B57',
   },
 });

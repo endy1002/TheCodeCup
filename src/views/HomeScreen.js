@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Alert, Image } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Alert, Image, StatusBar } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useAppStore } from '../viewmodels/useCartViewModel';
+import { useTheme } from '../contexts/ThemeContext';
 import { COFFEE_DATA } from '../models/Coffee';
 import CoffeeCard from '../components/CoffeeCard';
 import Header from '../components/Header';
@@ -9,6 +10,7 @@ import Header from '../components/Header';
 export default function HomeScreen() {
   const navigation = useNavigation();
   const route = useRoute();
+  const { theme } = useTheme();
   const { 
     cartItems,
     stamps, 
@@ -104,9 +106,9 @@ export default function HomeScreen() {
   };
 
   const renderMenuSection = () => (
-    <View style={styles.menuSection}>
-      <View style={styles.welcomeTextBox}>
-        <Text style={styles.welcomeText}>Welcome to The Code Cup</Text>
+    <View style={[styles.menuSection, { backgroundColor: theme.background }]}>
+      <View style={[styles.welcomeTextBox, { backgroundColor: theme.surface }]}>
+        <Text style={[styles.welcomeText, { color: theme.text }]}>Welcome to The Code Cup</Text>
       </View>
       
       <FlatList
@@ -125,47 +127,47 @@ export default function HomeScreen() {
   );
 
   const renderMembershipSection = () => (
-    <ScrollView style={styles.section}>
-      <Text style={styles.sectionTitle}>Membership</Text>
+    <ScrollView style={[styles.section, { backgroundColor: theme.background }]}>
+      <Text style={[styles.sectionTitle, { color: theme.text }]}>Membership</Text>
       
       {/* Stamps Section */}
-      <View style={styles.membershipCard}>
-        <Text style={styles.membershipCardTitle}>Coffee Stamps</Text>
+      <View style={[styles.membershipCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+        <Text style={[styles.membershipCardTitle, { color: theme.text }]}>Coffee Stamps</Text>
         <View style={styles.stampsContainer}>
           {Array.from({ length: 8 }, (_, index) => (
-            <View key={index} style={[styles.stamp, index < stamps && styles.stampFilled]}>
-              <Text style={styles.stampText}>{index < stamps ? '☕' : '○'}</Text>
+            <View key={index} style={[styles.stamp, { borderColor: theme.border }, index < stamps && { backgroundColor: theme.primary }]}>
+              <Text style={[styles.stampText, { color: index < stamps ? theme.buttonText : theme.textMuted }]}>{index < stamps ? '☕' : '○'}</Text>
             </View>
           ))}
         </View>
-        <Text style={styles.stampsProgress}>{stamps}/8 stamps - {8 - stamps} more for a free drink!</Text>
+        <Text style={[styles.stampsProgress, { color: theme.textSecondary }]}>{stamps}/8 stamps - {8 - stamps} more for a free drink!</Text>
       </View>
 
       {/* Points Section */}
-      <View style={styles.membershipCard}>
-        <Text style={styles.membershipCardTitle}>Loyalty Points</Text>
-        <Text style={styles.pointsDisplay}>{points} points</Text>
-        <View style={styles.pointsBar}>
-          <View style={[styles.pointsProgress, { width: `${Math.min(100, (points / 500) * 100)}%` }]} />
+      <View style={[styles.membershipCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+        <Text style={[styles.membershipCardTitle, { color: theme.text }]}>Loyalty Points</Text>
+        <Text style={[styles.pointsDisplay, { color: theme.primary }]}>{points} points</Text>
+        <View style={[styles.pointsBar, { backgroundColor: theme.border }]}>
+          <View style={[styles.pointsProgress, { backgroundColor: theme.accent, width: `${Math.min(100, (points / 500) * 100)}%` }]} />
         </View>
-        <Text style={styles.pointsText}>Earn 5 points for every $1 spent</Text>
+        <Text style={[styles.pointsText, { color: theme.textSecondary }]}>Earn 5 points for every $1 spent</Text>
         
         {points >= 100 && (
-          <TouchableOpacity style={styles.redeemButton} onPress={handleRedeemPoints}>
-            <Text style={styles.redeemButtonText}>Redeem 100 Points for Free Coffee</Text>
+          <TouchableOpacity style={[styles.redeemButton, { backgroundColor: theme.accent }]} onPress={handleRedeemPoints}>
+            <Text style={[styles.redeemButtonText, { color: theme.buttonText }]}>Redeem 100 Points for Free Coffee</Text>
           </TouchableOpacity>
         )}
       </View>
 
       {/* Free Drinks Section */}
       {pendingFreeDrinks > 0 && (
-        <View style={[styles.membershipCard, styles.freeDrinkCard]}>
-          <Text style={styles.membershipCardTitle}>🎉 Free Drinks Available!</Text>
-          <Text style={styles.freeDrinkCount}>
+        <View style={[styles.membershipCard, styles.freeDrinkCard, { backgroundColor: theme.freeBackground, borderColor: theme.freeBorder }]}>
+          <Text style={[styles.membershipCardTitle, { color: theme.freeText }]}>🎉 Free Drinks Available!</Text>
+          <Text style={[styles.freeDrinkCount, { color: theme.freeText }]}>
             You have {pendingFreeDrinks} free drink{pendingFreeDrinks > 1 ? 's' : ''} ready to redeem
           </Text>
-          <TouchableOpacity style={styles.redeemFreeDrinkButton} onPress={handleRedeemFreeDrink}>
-            <Text style={styles.redeemFreeDrinkButtonText}>Select Your Free Drink</Text>
+          <TouchableOpacity style={[styles.redeemFreeDrinkButton, { backgroundColor: theme.freeBorder }]} onPress={handleRedeemFreeDrink}>
+            <Text style={[styles.redeemFreeDrinkButtonText, { color: theme.buttonText }]}>Select Your Free Drink</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -255,7 +257,8 @@ export default function HomeScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      <StatusBar barStyle={theme.statusBarStyle} backgroundColor={theme.background} />
       <Header 
         title="The Code Cup"
         showProfile={true}
@@ -265,37 +268,37 @@ export default function HomeScreen() {
         cartItemCount={cartItems.length}
       />
       
-      <View style={styles.content}>
+      <View style={[styles.content, { backgroundColor: theme.background }]}>
         {activeBottomTab === 'menu' && renderMenuSection()}
         {activeBottomTab === 'membership' && renderMembershipSection()}
         {activeBottomTab === 'orders' && renderOrdersSection()}
 
-        <View style={styles.bottomNavigation}>
+        <View style={[styles.bottomNavigation, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
           <TouchableOpacity 
-            style={[styles.navButton, activeBottomTab === 'menu' && styles.activeNavButton]}
+            style={[styles.navButton, activeBottomTab === 'menu' && { backgroundColor: theme.primary }]}
             onPress={() => setActiveBottomTab('menu')}
           >
-            <Text style={[styles.navTextIcon, activeBottomTab === 'menu' && styles.activeNavTextIcon]}>☕</Text>
-            <Text style={[styles.navLabel, activeBottomTab === 'menu' && styles.activeNavLabel]}>Menu</Text>
+            <Text style={[styles.navTextIcon, { color: activeBottomTab === 'menu' ? theme.buttonText : theme.textSecondary }]}>☕</Text>
+            <Text style={[styles.navLabel, { color: activeBottomTab === 'menu' ? theme.buttonText : theme.textSecondary }]}>Menu</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
-            style={[styles.navButton, activeBottomTab === 'membership' && styles.activeNavButton]}
+            style={[styles.navButton, activeBottomTab === 'membership' && { backgroundColor: theme.primary }]}
             onPress={() => setActiveBottomTab('membership')}
           >
-            <Text style={[styles.navTextIcon, activeBottomTab === 'membership' && styles.activeNavTextIcon]}>⭐</Text>
-            <Text style={[styles.navLabel, activeBottomTab === 'membership' && styles.activeNavLabel]}>Membership</Text>
+            <Text style={[styles.navTextIcon, { color: activeBottomTab === 'membership' ? theme.buttonText : theme.textSecondary }]}>⭐</Text>
+            <Text style={[styles.navLabel, { color: activeBottomTab === 'membership' ? theme.buttonText : theme.textSecondary }]}>Membership</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
-            style={[styles.navButton, activeBottomTab === 'orders' && styles.activeNavButton]}
+            style={[styles.navButton, activeBottomTab === 'orders' && { backgroundColor: theme.primary }]}
             onPress={() => setActiveBottomTab('orders')}
           >
             <Image 
               source={require('../../assets/orders.png')} 
-              style={[styles.navIcon, activeBottomTab === 'orders' && styles.activeNavIcon]} 
+              style={[styles.navIcon, { tintColor: activeBottomTab === 'orders' ? theme.buttonText : theme.textSecondary }]} 
             />
-            <Text style={[styles.navLabel, activeBottomTab === 'orders' && styles.activeNavLabel]}>Orders</Text>
+            <Text style={[styles.navLabel, { color: activeBottomTab === 'orders' ? theme.buttonText : theme.textSecondary }]}>Orders</Text>
           </TouchableOpacity>
         </View>
       </View>

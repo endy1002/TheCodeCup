@@ -1,21 +1,24 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function Header({ title, showProfile = false, onProfilePress, showCart = false, onCartPress, cartItemCount = 0 }) {
+  const { theme } = useTheme();
+  
   return (
-    <View style={styles.header}>
+    <View style={[styles.header, { backgroundColor: theme.primary, borderBottomColor: theme.border }]}>
       <View style={styles.leftSection}>
       </View>
       
-      <Text style={styles.title}>{title}</Text>
+      <Text style={[styles.title, { color: theme.buttonText }]}>{title}</Text>
       
       <View style={styles.rightSection}>
         {showCart && (
           <TouchableOpacity style={styles.iconButton} onPress={onCartPress}>
             <Text style={styles.icon}>🛒</Text>
             {cartItemCount > 0 && (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{cartItemCount}</Text>
+              <View style={[styles.badge, { backgroundColor: theme.accent }]}>
+                <Text style={[styles.badgeText, { color: theme.buttonText }]}>{cartItemCount}</Text>
               </View>
             )}
           </TouchableOpacity>
@@ -37,9 +40,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#8B4513',
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
   },
   leftSection: {
     flex: 1,
@@ -47,12 +48,10 @@ const styles = StyleSheet.create({
   logo: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#fff',
   },
   title: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#fff',
     textAlign: 'center',
   },
   rightSection: {
@@ -73,7 +72,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     right: 0,
-    backgroundColor: '#ff4444',
     borderRadius: 10,
     minWidth: 20,
     height: 20,
@@ -81,7 +79,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   badgeText: {
-    color: 'white',
     fontSize: 12,
     fontWeight: 'bold',
   },

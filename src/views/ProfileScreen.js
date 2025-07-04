@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, TextInput, Alert, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, TextInput, Alert, Modal, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAppStore } from '../viewmodels/useCartViewModel';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function ProfileScreen() {
   const navigation = useNavigation();
+  const { theme, isDarkMode, toggleTheme } = useTheme();
   const { 
     userProfile, 
     updateProfile,
@@ -66,97 +68,125 @@ export default function ProfileScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={styles.backButtonText}>← Back</Text>
-        </TouchableOpacity>
-        <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>Profile</Text>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      <StatusBar barStyle={theme.statusBarStyle} backgroundColor={theme.background} />
+      <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
+        <View style={styles.headerLeft}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Text style={[styles.backButtonText, { color: theme.primary }]}>← Back</Text>
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity 
-          style={styles.settingsButton}
-          onPress={() => navigation.navigate('Settings')}
-        >
-          <Text style={styles.settingsButtonText}>⚙️</Text>
-        </TouchableOpacity>
+        <View style={styles.headerCenter}>
+          <Text style={[styles.headerTitle, { color: theme.text }]}>Profile</Text>
+        </View>
+        <View style={styles.headerRight}>
+          <TouchableOpacity 
+            style={styles.settingsButton}
+            onPress={() => navigation.navigate('Settings')}
+          >
+            <Text style={styles.settingsButtonText}>⚙️</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
-      <ScrollView style={styles.content}>
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Personal Information</Text>
+      <ScrollView style={[styles.content, { backgroundColor: theme.background }]}>
+        {/* Theme Toggle Section */}
+        <View style={[styles.section, { backgroundColor: theme.surface }]}>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>Appearance</Text>
+          <View style={styles.profileRow}>
+            <View style={styles.profileInfo}>
+              <Text style={[styles.profileLabel, { color: theme.text }]}>Dark Mode</Text>
+              <Text style={[styles.profileValue, { color: theme.textSecondary }]}>
+                {isDarkMode ? 'Enabled' : 'Disabled'}
+              </Text>
+            </View>
+            <TouchableOpacity 
+              style={[styles.themeToggleButton, { backgroundColor: isDarkMode ? theme.accent : theme.border }]}
+              onPress={toggleTheme}
+            >
+              <View style={[
+                styles.themeToggleCircle, 
+                { 
+                  backgroundColor: theme.surface,
+                  transform: [{ translateX: isDarkMode ? 20 : 0 }]
+                }
+              ]} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Personal Information Section */}
+        <View style={[styles.section, { backgroundColor: theme.surface }]}>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>Personal Information</Text>
           {Object.entries(userProfile).map(([key, value]) => (
             <View key={key} style={styles.profileRow}>
               <View style={styles.profileInfo}>
-                <Text style={styles.profileLabel}>{key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</Text>
-                <Text style={styles.profileValue}>{value}</Text>
+                <Text style={[styles.profileLabel, { color: theme.text }]}>
+                  {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                </Text>
+                <Text style={[styles.profileValue, { color: theme.textSecondary }]}>{value}</Text>
               </View>
               <TouchableOpacity 
-                style={styles.editButton}
+                style={[styles.editButton, { backgroundColor: theme.primary }]}
                 onPress={() => handleEditProfile(key, value)}
               >
-                <Text style={styles.editButtonText}>Edit</Text>
+                <Text style={[styles.editButtonText, { color: theme.buttonText }]}>Edit</Text>
               </TouchableOpacity>
             </View>
           ))}
         </View>
         
         {/* User Management Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>User Management</Text>
+        <View style={[styles.section, { backgroundColor: theme.surface }]}>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>User Management</Text>
           <TouchableOpacity 
-            style={styles.switchUserButton}
+            style={[styles.switchUserButton, { backgroundColor: theme.error }]}
             onPress={handleSwitchUser}
           >
-            <Text style={styles.switchUserButtonText}>🔄 Switch User</Text>
-            <Text style={styles.switchUserSubtext}>Clear all data and start fresh</Text>
+            <Text style={[styles.switchUserButtonText, { color: theme.buttonText }]}>🔄 Switch User</Text>
+            <Text style={[styles.switchUserSubtext, { color: '#FFE4E1' }]}>Clear all data and start fresh</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
 
-      {/* Edit Profile */}
+      {/* Edit Profile Modal */}
       <Modal visible={editingField !== null} transparent animationType="slide">
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>
+          <View style={[styles.modalContent, { backgroundColor: theme.surface }]}>
+            <Text style={[styles.modalTitle, { color: theme.text }]}>
               Edit {editingField?.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
             </Text>
             <TextInput
-              style={styles.modalInput}
+              style={[styles.modalInput, { 
+                backgroundColor: theme.inputBackground, 
+                borderColor: theme.inputBorder,
+                color: theme.text 
+              }]}
               value={editValue}
               onChangeText={setEditValue}
               placeholder={`Enter new ${editingField}`}
+              placeholderTextColor={theme.textMuted}
             />
             <View style={styles.modalButtons}>
               <TouchableOpacity 
-                style={[styles.modalButton, styles.cancelModalButton]}
+                style={[styles.modalButton, styles.cancelModalButton, { borderColor: theme.border }]}
                 onPress={() => setEditingField(null)}
               >
-                <Text style={styles.cancelModalButtonText}>Cancel</Text>
+                <Text style={[styles.cancelModalButtonText, { color: theme.textSecondary }]}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity 
-                style={[styles.modalButton, styles.saveModalButton]}
+                style={[styles.modalButton, styles.saveModalButton, { backgroundColor: theme.primary }]}
                 onPress={handleSaveProfile}
               >
-                <Text style={styles.saveModalButtonText}>Save</Text>
+                <Text style={[styles.saveModalButtonText, { color: theme.buttonText }]}>Save</Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
       </Modal>
-
-      {/* Switch User Button - Always visible */}
-      <View style={styles.switchUserContainer}>
-        <TouchableOpacity 
-          style={styles.switchUserButton}
-          onPress={handleSwitchUser}
-        >
-          <Text style={styles.switchUserButtonText}>Switch User</Text>
-        </TouchableOpacity>
-      </View>
     </SafeAreaView>
   );
 }
@@ -164,39 +194,46 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f8f8',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    minHeight: 56, // Ensure consistent height across platforms
   },
-  backButton: {
+  headerLeft: {
     flex: 1,
-  },
-  backButtonText: {
-    fontSize: 16,
-    color: '#6B4E3D',
-    fontWeight: '600',
+    justifyContent: 'center',
   },
   headerCenter: {
     flex: 2,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   headerRight: {
     flex: 1,
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+  },
+  backButton: {
+    paddingVertical: 8,
+  },
+  backButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
   },
   settingsButton: {
     width: 40,
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.2)',
     borderRadius: 20,
   },
   settingsButtonText: {
@@ -205,13 +242,11 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
   },
   content: {
     flex: 1,
   },
   section: {
-    backgroundColor: '#fff',
     margin: 16,
     borderRadius: 12,
     padding: 16,
@@ -225,7 +260,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 16,
-    color: '#333',
   },
   profileRow: {
     flexDirection: 'row',
@@ -240,30 +274,38 @@ const styles = StyleSheet.create({
   },
   profileLabel: {
     fontSize: 14,
-    color: '#666',
     marginBottom: 4,
   },
   profileValue: {
     fontSize: 16,
-    color: '#333',
     fontWeight: '500',
   },
   editButton: {
-    backgroundColor: '#6B4E3D',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 6,
   },
   editButtonText: {
-    color: '#fff',
     fontSize: 14,
     fontWeight: '600',
   },
-  infoText: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
-    marginBottom: 8,
+  // Theme toggle styles
+  themeToggleButton: {
+    width: 50,
+    height: 26,
+    borderRadius: 13,
+    padding: 3,
+    justifyContent: 'center',
+  },
+  themeToggleCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
   },
   modalOverlay: {
     flex: 1,
@@ -272,22 +314,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: '#fff',
     borderRadius: 12,
     padding: 20,
     width: '80%',
     maxWidth: 300,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 16,
     textAlign: 'center',
-    color: '#333',
   },
   modalInput: {
     borderWidth: 1,
-    borderColor: '#ddd',
     borderRadius: 8,
     padding: 12,
     marginBottom: 20,
@@ -304,29 +348,20 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   cancelModalButton: {
-    backgroundColor: '#f0f0f0',
+    borderWidth: 1,
   },
   saveModalButton: {
-    backgroundColor: '#6B4E3D',
+    // backgroundColor will be set dynamically
   },
   cancelModalButtonText: {
-    color: '#333',
     textAlign: 'center',
     fontWeight: '600',
   },
   saveModalButtonText: {
-    color: '#fff',
     textAlign: 'center',
     fontWeight: '600',
   },
-  switchUserContainer: {
-    padding: 16,
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
-  },
   switchUserButton: {
-    backgroundColor: '#FF6B4A',
     paddingVertical: 16,
     paddingHorizontal: 20,
     borderRadius: 12,
@@ -336,13 +371,11 @@ const styles = StyleSheet.create({
     borderColor: '#FF3D00',
   },
   switchUserButtonText: {
-    color: '#fff',
     fontSize: 16,
     fontWeight: '700',
     marginBottom: 4,
   },
   switchUserSubtext: {
-    color: '#FFE4E1',
     fontSize: 12,
     fontWeight: '400',
     textAlign: 'center',

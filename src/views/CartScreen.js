@@ -1,11 +1,13 @@
 import React from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, SafeAreaView, Alert, Image } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, SafeAreaView, Alert, Image, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAppStore } from '../viewmodels/useCartViewModel';
 import { useDataPersistence } from '../hooks/useDataPersistence';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function CartScreen() {
   const navigation = useNavigation();
+  const { theme } = useTheme();
   const { cartItems, removeFromCart, placeOrder } = useAppStore();
   const { forceSave } = useDataPersistence();
 
@@ -129,15 +131,16 @@ export default function CartScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      <StatusBar barStyle={theme.statusBarStyle} backgroundColor={theme.background} />
+      <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
         <TouchableOpacity 
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Text style={styles.backButtonText}>← Back</Text>
+          <Text style={[styles.backButtonText, { color: theme.primary }]}>← Back</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Your Cart ({cartItems.length})</Text>
+        <Text style={[styles.headerTitle, { color: theme.text }]}>Your Cart ({cartItems.length})</Text>
       </View>
 
       <FlatList
@@ -145,6 +148,7 @@ export default function CartScreen() {
         keyExtractor={(item) => item.id}
         renderItem={renderCartItem}
         contentContainerStyle={styles.listContainer}
+        style={{ backgroundColor: theme.background }}
       />
 
       {/* Rewards Summary */}
