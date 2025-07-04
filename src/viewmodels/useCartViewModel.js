@@ -8,6 +8,47 @@ export const useAppStore = create((set, get) => ({
   isInitialized: false,
   // Cart Management
   cartItems: [],
+  
+  // Favorites Management
+  favorites: [],
+  addToFavorites: async (coffee) => {
+    const state = get();
+    if (!state.favorites.some(fav => fav.id === coffee.id)) {
+      const newFavorites = [...state.favorites, coffee];
+      set({ favorites: newFavorites });
+      
+      try {
+        await dataPersistenceService.saveFavorites(newFavorites);
+      } catch (error) {
+        console.warn('Failed to save favorites:', error);
+      }
+    }
+  },
+  removeFromFavorites: async (coffeeId) => {
+    const state = get();
+    const newFavorites = state.favorites.filter(fav => fav.id !== coffeeId);
+    set({ favorites: newFavorites });
+    
+    try {
+      await dataPersistenceService.saveFavorites(newFavorites);
+    } catch (error) {
+      console.warn('Failed to save favorites:', error);
+    }
+  },
+  toggleFavorite: async (coffee) => {
+    const state = get();
+    const isFavorite = state.favorites.some(fav => fav.id === coffee.id);
+    
+    if (isFavorite) {
+      await state.removeFromFavorites(coffee.id);
+    } else {
+      await state.addToFavorites(coffee);
+    }
+  },
+  isFavorite: (coffeeId) => {
+    const state = get();
+    return state.favorites.some(fav => fav.id === coffeeId);
+  },
   addToCart: async (item) => {
     const state = get();
     const newCartItems = [...state.cartItems, { ...item, id: Date.now().toString() }];
@@ -458,6 +499,7 @@ export const useAppStore = create((set, get) => ({
     // Reset to default state
     set({
       cartItems: [],
+      favorites: [],
       userProfile: {
         name: 'Le Tan Nguyen Dat',
         dateOfBirth: '2005-02-10',

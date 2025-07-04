@@ -1,9 +1,15 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAppStore } from '../viewmodels/useCartViewModel';
 
 export default function CoffeeCard({ coffee, onPress }) {
   const { theme } = useTheme();
+  const { isFavorite, toggleFavorite } = useAppStore();
+  
+  const handleFavoritePress = () => {
+    toggleFavorite(coffee);
+  };
   
   return (
     <TouchableOpacity style={[styles.card, { backgroundColor: theme.surface, shadowColor: theme.shadow }]} onPress={() => onPress(coffee)}>
@@ -15,7 +21,17 @@ export default function CoffeeCard({ coffee, onPress }) {
         )}
       </View>
       <View style={styles.content}>
-        <Text style={[styles.name, { color: theme.text }]}>{coffee.name}</Text>
+        <View style={styles.titleRow}>
+          <Text style={[styles.name, { color: theme.text }]}>{coffee.name}</Text>
+          <TouchableOpacity 
+            style={styles.favoriteButton}
+            onPress={handleFavoritePress}
+          >
+            <Text style={[styles.favoriteIcon, { color: isFavorite(coffee.id) ? '#FFD700' : theme.textMuted }]}>
+              {isFavorite(coffee.id) ? '★' : '☆'}
+            </Text>
+          </TouchableOpacity>
+        </View>
         <Text style={[styles.description, { color: theme.textSecondary }]}>{coffee.description}</Text>
         <Text style={[styles.category, { color: theme.textMuted }]}>{coffee.category}</Text>
         <Text style={[styles.price, { color: theme.primary }]}>${coffee.price.toFixed(2)}</Text>
@@ -57,10 +73,23 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'space-between',
   },
+  titleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 4,
+  },
   name: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 4,
+    flex: 1,
+    marginRight: 8,
+  },
+  favoriteButton: {
+    padding: 4,
+  },
+  favoriteIcon: {
+    fontSize: 20,
   },
   description: {
     fontSize: 14,

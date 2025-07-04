@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, SafeAreaView, Alert, Image } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, SafeAreaView, Alert, Image, StatusBar } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { useAppStore } from '../viewmodels/useCartViewModel';
+import { useTheme } from '../contexts/ThemeContext';
 import { DRINK_SIZES, SWEETNESS_LEVELS, ICE_LEVELS } from '../models/Coffee';
 
 export default function DetailsScreen() {
   const { params } = useRoute();
   const navigation = useNavigation();
-  const { addToCart } = useAppStore();
+  const { theme } = useTheme();
+  const { addToCart, isFavorite, toggleFavorite } = useAppStore();
   
   const coffee = params?.coffee;
   
@@ -82,29 +84,38 @@ export default function DetailsScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView}>
-        <View style={styles.header}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      <StatusBar barStyle={theme.statusBarStyle} backgroundColor={theme.background} />
+      <ScrollView style={[styles.scrollView, { backgroundColor: theme.background }]}>
+        <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
           <TouchableOpacity 
             style={styles.backButton}
             onPress={() => navigation.goBack()}
           >
-            <Text style={styles.backButtonText}>← Back</Text>
+            <Text style={[styles.backButtonText, { color: theme.primary }]}>← Back</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.favoriteButton}
+            onPress={() => toggleFavorite(coffee)}
+          >
+            <Text style={[styles.favoriteIcon, { color: isFavorite(coffee.id) ? '#FFD700' : theme.textMuted }]}>
+              {isFavorite(coffee.id) ? '★' : '☆'}
+            </Text>
           </TouchableOpacity>
         </View>
 
-        <View style={styles.coffeeInfo}>
-          <View style={styles.imageContainer}>
+        <View style={[styles.coffeeInfo, { backgroundColor: theme.surface }]}>
+          <View style={[styles.imageContainer, { backgroundColor: theme.inputBackground }]}>
             {coffee.image ? (
               <Image source={coffee.image} style={styles.coffeeImage} />
             ) : (
               <Text style={styles.coffeeEmoji}>☕</Text>
             )}
           </View>
-          <Text style={styles.coffeeName}>{coffee.name}</Text>
-          <Text style={styles.coffeeDescription}>{coffee.description}</Text>
-          <Text style={styles.coffeeCategory}>{coffee.category}</Text>
-          <Text style={styles.basePrice}>Base Price: ${coffee.price.toFixed(2)}</Text>
+          <Text style={[styles.coffeeName, { color: theme.text }]}>{coffee.name}</Text>
+          <Text style={[styles.coffeeDescription, { color: theme.textSecondary }]}>{coffee.description}</Text>
+          <Text style={[styles.coffeeCategory, { color: theme.textMuted }]}>{coffee.category}</Text>
+          <Text style={[styles.basePrice, { color: theme.primary }]}>Base Price: ${coffee.price.toFixed(2)}</Text>
         </View>
 
         <OptionSelector
@@ -169,20 +180,28 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     padding: 16,
+    borderBottomWidth: 1,
   },
   backButton: {
     alignSelf: 'flex-start',
   },
   backButtonText: {
     fontSize: 16,
-    color: '#8B4513',
     fontWeight: '600',
+  },
+  favoriteButton: {
+    padding: 8,
+  },
+  favoriteIcon: {
+    fontSize: 24,
   },
   coffeeInfo: {
     alignItems: 'center',
     padding: 20,
-    backgroundColor: '#fff',
     marginHorizontal: 16,
     marginBottom: 16,
     borderRadius: 12,
@@ -208,25 +227,21 @@ const styles = StyleSheet.create({
   coffeeName: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
     marginBottom: 8,
   },
   coffeeDescription: {
     fontSize: 16,
-    color: '#666',
     textAlign: 'center',
     marginBottom: 8,
   },
   coffeeCategory: {
     fontSize: 14,
-    color: '#8B4513',
     fontWeight: '600',
     marginBottom: 12,
   },
   basePrice: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#2E8B57',
   },
   optionSection: {
     backgroundColor: '#fff',

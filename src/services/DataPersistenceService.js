@@ -5,6 +5,7 @@ import { Platform } from 'react-native';
 const STORAGE_KEYS = {
   USER_PROFILE: '@CodeCup:userProfile',
   CART_ITEMS: '@CodeCup:cartItems',
+  FAVORITES: '@CodeCup:favorites',
   STAMPS: '@CodeCup:stamps',
   POINTS: '@CodeCup:points',
   POINT_HISTORY: '@CodeCup:pointHistory',
@@ -98,6 +99,15 @@ class DataPersistenceService {
     return await this.getItem(STORAGE_KEYS.CART_ITEMS, []);
   }
 
+  // Favorites persistence
+  async saveFavorites(favorites) {
+    return await this.setItem(STORAGE_KEYS.FAVORITES, favorites);
+  }
+
+  async getFavorites() {
+    return await this.getItem(STORAGE_KEYS.FAVORITES, []);
+  }
+
   // Stamps and Points persistence
   async saveStamps(stamps) {
     return await this.setItem(STORAGE_KEYS.STAMPS, stamps);
@@ -173,6 +183,7 @@ class DataPersistenceService {
     const saveOperations = [
       { name: 'userProfile', operation: () => this.saveUserProfile(state.userProfile) },
       { name: 'cartItems', operation: () => this.saveCartItems(state.cartItems) },
+      { name: 'favorites', operation: () => this.saveFavorites(state.favorites || []) },
       { name: 'stamps', operation: () => this.saveStamps(state.stamps) },
       { name: 'points', operation: () => this.savePoints(state.points) },
       { name: 'pointHistory', operation: () => this.savePointHistory(state.pointHistory) },
@@ -216,6 +227,7 @@ class DataPersistenceService {
       const [
         userProfile,
         cartItems,
+        favorites,
         stamps,
         points,
         pointHistory,
@@ -225,6 +237,7 @@ class DataPersistenceService {
       ] = await Promise.all([
         this.getUserProfile(),
         this.getCartItems(),
+        this.getFavorites(),
         this.getStamps(),
         this.getPoints(),
         this.getPointHistory(),
@@ -236,6 +249,7 @@ class DataPersistenceService {
       return {
         userProfile,
         cartItems,
+        favorites,
         stamps,
         points,
         pointHistory,

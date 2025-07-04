@@ -1,16 +1,20 @@
 import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Image, Alert } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Image, Alert, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAppStore } from '../viewmodels/useCartViewModel';
+import { useTheme } from '../contexts/ThemeContext';
 import { COFFEE_DATA } from '../models/Coffee';
 
 export default function FreeDrinkSelectionScreen() {
   const navigation = useNavigation();
+  const { theme } = useTheme();
   const { 
     addFreeDrinkToCart, 
     cancelFreeDrinkSelection,
     pendingFreeDrinks,
-    isSelectingFreeDrink 
+    isSelectingFreeDrink,
+    isFavorite,
+    toggleFavorite
   } = useAppStore();
 
   const handleSelectFreeDrink = async (coffee) => {
@@ -54,41 +58,50 @@ export default function FreeDrinkSelectionScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      <StatusBar barStyle={theme.statusBarStyle} backgroundColor={theme.background} />
+      <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
         <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
-          <Text style={styles.cancelButtonText}>✕ Cancel</Text>
+          <Text style={[styles.cancelButtonText, { color: theme.error }]}>✕ Cancel</Text>
         </TouchableOpacity>
         <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>Select Your Free Drink</Text>
-          <Text style={styles.headerSubtitle}>Size: Small Only | Quantity: 1</Text>
+          <Text style={[styles.headerTitle, { color: theme.text }]}>Select Your Free Drink</Text>
+          <Text style={[styles.headerSubtitle, { color: theme.textSecondary }]}>Size: Small Only | Quantity: 1</Text>
         </View>
         <View style={styles.headerRight} />
       </View>
 
-      <View style={styles.rewardBanner}>
-        <Text style={styles.rewardText}>🎉 Congratulations!</Text>
-        <Text style={styles.rewardSubtext}>You have {pendingFreeDrinks} free drink{pendingFreeDrinks > 1 ? 's' : ''} to redeem</Text>
+      <View style={[styles.rewardBanner, { backgroundColor: theme.freeBackground }]}>
+        <Text style={[styles.rewardText, { color: theme.freeText }]}>🎉 Congratulations!</Text>
+        <Text style={[styles.rewardSubtext, { color: theme.freeText }]}>You have {pendingFreeDrinks} free drink{pendingFreeDrinks > 1 ? 's' : ''} to redeem</Text>
       </View>
 
-      <ScrollView style={styles.menuContainer}>
-        <Text style={styles.sectionTitle}>Choose Your Free Drink</Text>
+      <ScrollView style={[styles.menuContainer, { backgroundColor: theme.background }]}>
+        <Text style={[styles.sectionTitle, { color: theme.text }]}>Choose Your Free Drink</Text>
         <View style={styles.coffeeGrid}>
           {COFFEE_DATA.map((coffee) => (
             <TouchableOpacity
               key={coffee.id}
-              style={styles.coffeeCard}
+              style={[styles.coffeeCard, { backgroundColor: theme.surface, borderColor: theme.border }]}
               onPress={() => handleSelectFreeDrink(coffee)}
             >
+              <TouchableOpacity 
+                style={styles.favoriteButton}
+                onPress={() => toggleFavorite(coffee)}
+              >
+                <Text style={[styles.favoriteIcon, { color: isFavorite(coffee.id) ? '#FFD700' : theme.textMuted }]}>
+                  {isFavorite(coffee.id) ? '★' : '☆'}
+                </Text>
+              </TouchableOpacity>
               <Image source={coffee.image} style={styles.coffeeImage} />
               <View style={styles.coffeeInfo}>
-                <Text style={styles.coffeeName}>{coffee.name}</Text>
-                <Text style={styles.coffeeDescription}>{coffee.description}</Text>
+                <Text style={[styles.coffeeName, { color: theme.text }]}>{coffee.name}</Text>
+                <Text style={[styles.coffeeDescription, { color: theme.textSecondary }]}>{coffee.description}</Text>
                 <View style={styles.priceContainer}>
-                  <Text style={styles.originalPrice}>${coffee.price.toFixed(2)}</Text>
-                  <Text style={styles.freePrice}>FREE</Text>
+                  <Text style={[styles.originalPrice, { color: theme.textMuted }]}>${coffee.price.toFixed(2)}</Text>
+                  <Text style={[styles.freePrice, { color: theme.freeText }]}>FREE</Text>
                 </View>
-                <Text style={styles.sizeInfo}>Small Size Only</Text>
+                <Text style={[styles.sizeInfo, { color: theme.textMuted }]}>Small Size Only</Text>
               </View>
             </TouchableOpacity>
           ))}
@@ -188,8 +201,9 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    borderWidth: 2,
-    borderColor: '#4CAF50',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    position: 'relative',
   },
   coffeeImage: {
     width: '100%',
@@ -256,5 +270,15 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+  },
+  favoriteButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    zIndex: 1,
+    padding: 4,
+  },
+  favoriteIcon: {
+    fontSize: 18,
   },
 });

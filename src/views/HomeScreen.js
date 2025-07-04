@@ -23,7 +23,8 @@ export default function HomeScreen() {
     redeemPoints,
     redeemPointsForFreeDrink,
     startFreeDrinkSelection,
-    pendingFreeDrinks
+    pendingFreeDrinks,
+    favorites
   } = useAppStore();
 
   const [activeBottomTab, setActiveBottomTab] = useState('menu');
@@ -256,6 +257,35 @@ export default function HomeScreen() {
     </ScrollView>
   );
 
+  const renderFavoritesSection = () => (
+    <View style={[styles.section, { backgroundColor: theme.background }]}>
+      <Text style={[styles.sectionTitle, { color: theme.text }]}>Favorites</Text>
+      
+      {favorites.length === 0 ? (
+        <View style={[styles.emptyFavoritesContainer, { backgroundColor: theme.surface }]}>
+          <Text style={[styles.emptyFavoritesIcon]}>⭐</Text>
+          <Text style={[styles.emptyFavoritesTitle, { color: theme.text }]}>No Favorites Yet</Text>
+          <Text style={[styles.emptyFavoritesSubtitle, { color: theme.textSecondary }]}>
+            Tap the star on any coffee to add it to your favorites
+          </Text>
+        </View>
+      ) : (
+        <FlatList
+          data={favorites}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <CoffeeCard 
+              coffee={item} 
+              onPress={handleCoffeePress}
+            />
+          )}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
+    </View>
+  );
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <StatusBar barStyle={theme.statusBarStyle} backgroundColor={theme.background} />
@@ -272,6 +302,7 @@ export default function HomeScreen() {
         {activeBottomTab === 'menu' && renderMenuSection()}
         {activeBottomTab === 'membership' && renderMembershipSection()}
         {activeBottomTab === 'orders' && renderOrdersSection()}
+        {activeBottomTab === 'favorites' && renderFavoritesSection()}
 
         <View style={[styles.bottomNavigation, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
           <TouchableOpacity 
@@ -299,6 +330,14 @@ export default function HomeScreen() {
               style={[styles.navIcon, { tintColor: activeBottomTab === 'orders' ? theme.buttonText : theme.textSecondary }]} 
             />
             <Text style={[styles.navLabel, { color: activeBottomTab === 'orders' ? theme.buttonText : theme.textSecondary }]}>Orders</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.navButton, activeBottomTab === 'favorites' && { backgroundColor: theme.primary }]}
+            onPress={() => setActiveBottomTab('favorites')}
+          >
+            <Text style={[styles.navTextIcon, { color: activeBottomTab === 'favorites' ? theme.buttonText : theme.textSecondary }]}>❤️</Text>
+            <Text style={[styles.navLabel, { color: activeBottomTab === 'favorites' ? theme.buttonText : theme.textSecondary }]}>Favorites</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -694,5 +733,29 @@ const styles = StyleSheet.create({
   orderStatus: {
     fontSize: 12,
     fontWeight: 'bold',
+  },
+  emptyFavoritesContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 40,
+    borderRadius: 8,
+    marginTop: 16,
+    elevation: 1,
+  },
+  emptyFavoritesIcon: {
+    fontSize: 48,
+    color: '#ccc',
+    marginBottom: 16,
+  },
+  emptyFavoritesTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    color: '#333',
+  },
+  emptyFavoritesSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
   },
 });
