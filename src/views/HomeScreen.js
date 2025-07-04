@@ -18,7 +18,10 @@ export default function HomeScreen() {
     orderHistory,
     completeOrder,
     cancelOrder,
-    redeemPoints
+    redeemPoints,
+    redeemPointsForFreeDrink,
+    startFreeDrinkSelection,
+    pendingFreeDrinks
   } = useAppStore();
 
   const [activeBottomTab, setActiveBottomTab] = useState('menu');
@@ -76,10 +79,28 @@ export default function HomeScreen() {
         { text: 'Cancel', style: 'cancel' },
         { 
           text: 'Redeem', 
-          onPress: () => redeemPoints(100)
+          onPress: async () => {
+            const success = await redeemPointsForFreeDrink();
+            if (success) {
+              navigation.navigate('FreeDrinkSelection');
+            } else {
+              Alert.alert('Error', 'Failed to redeem points. Please try again.');
+            }
+          }
         }
       ]
     );
+  };
+
+  const handleRedeemFreeDrink = () => {
+    if (pendingFreeDrinks > 0) {
+      const success = startFreeDrinkSelection();
+      if (success) {
+        navigation.navigate('FreeDrinkSelection');
+      }
+    } else {
+      Alert.alert('No Free Drinks', 'You don\'t have any free drinks available to redeem.');
+    }
   };
 
   const renderMenuSection = () => (
@@ -135,6 +156,19 @@ export default function HomeScreen() {
           </TouchableOpacity>
         )}
       </View>
+
+      {/* Free Drinks Section */}
+      {pendingFreeDrinks > 0 && (
+        <View style={[styles.membershipCard, styles.freeDrinkCard]}>
+          <Text style={styles.membershipCardTitle}>🎉 Free Drinks Available!</Text>
+          <Text style={styles.freeDrinkCount}>
+            You have {pendingFreeDrinks} free drink{pendingFreeDrinks > 1 ? 's' : ''} ready to redeem
+          </Text>
+          <TouchableOpacity style={styles.redeemFreeDrinkButton} onPress={handleRedeemFreeDrink}>
+            <Text style={styles.redeemFreeDrinkButtonText}>Select Your Free Drink</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* Points History */}
       <View style={styles.membershipCard}>
@@ -383,6 +417,11 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     elevation: 1,
   },
+  freeDrinkCard: {
+    backgroundColor: '#E8F5E8',
+    borderColor: '#4CAF50',
+    borderWidth: 2,
+  },
   membershipCardTitle: {
     fontSize: 16,
     fontWeight: '600',
@@ -450,6 +489,30 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  freeDrinkCount: {
+    fontSize: 16,
+    textAlign: 'center',
+    color: '#2E7D32',
+    marginBottom: 12,
+    fontWeight: '500',
+  },
+  redeemFreeDrinkButton: {
+    backgroundColor: '#4CAF50',
+    borderRadius: 8,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 8,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  redeemFreeDrinkButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
   },
   emptyText: {
     textAlign: 'center',

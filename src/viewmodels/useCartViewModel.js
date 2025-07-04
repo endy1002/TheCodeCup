@@ -64,6 +64,9 @@ export const useAppStore = create((set, get) => ({
   stamps: 0,
   points: 0,
   pointHistory: [],
+  // Free drink redemption state
+  pendingFreeDrinks: 0, // Number of free drinks available to redeem
+  isSelectingFreeDrink: false, // Whether user is currently selecting a free drink
   addStamp: async () => {
     const state = get();
     const newStamps = (state.stamps + 1) % 8;
@@ -77,9 +80,12 @@ export const useAppStore = create((set, get) => ({
       type: 'reward'
     }] : state.pointHistory;
     
+    const newPendingFreeDrinks = earnedFreeDrink ? state.pendingFreeDrinks + 1 : state.pendingFreeDrinks;
+    
     set({
       stamps: newStamps,
-      pointHistory: newPointHistory
+      pointHistory: newPointHistory,
+      pendingFreeDrinks: newPendingFreeDrinks
     });
     
     await Promise.all([
@@ -142,17 +148,25 @@ export const useAppStore = create((set, get) => ({
   orderHistory: [],
   placeOrder: async (items) => {
     const orderId = Date.now().toString();
-    const totalAmount = items.reduce((sum, item) => sum + item.totalPrice, 0);
-    const pointsEarned = Math.floor(totalAmount * 5); // 1$ = 5 points
-    const totalCups = items.reduce((sum, item) => sum + item.quantity, 0); // Calculate total cups
+    
+    // Separate free drinks from paid items for reward calculation
+    const paidItems = items.filter(item => !item.isFree);
+    const freeItems = items.filter(item => item.isFree);
+    
+    // Calculate totals only from paid items
+    const totalAmount = paidItems.reduce((sum, item) => sum + item.totalPrice, 0);
+    const pointsEarned = Math.floor(totalAmount * 5); // 1$ = 5 points, only from paid items
+    const totalCups = paidItems.reduce((sum, item) => sum + item.quantity, 0); // Only count paid cups for stamps
     
     const state = get();
     const newOrder = {
       id: orderId,
-      items: items,
-      totalAmount,
-      pointsEarned, // Store for later when order is completed
-      totalCups, // Store for later when order is completed
+      items: items, // Include all items (free and paid) in the order
+      totalAmount, // But total amount is only from paid items
+      pointsEarned, // Store for later when order is completed (only from paid items)
+      totalCups, // Store for later when order is completed (only from paid items)
+      paidItemsCount: paidItems.length,
+      freeItemsCount: freeItems.length,
       status: 'in-process',
       orderDate: new Date().toISOString(),
       estimatedTime: '15-20 mins'
@@ -178,40 +192,71 @@ export const useAppStore = create((set, get) => ({
     const order = state.currentOrders.find(o => o.id === orderId);
     if (!order) return;
     
-    // Calculate new stamps, considering the 8-stamp reset cycle
+    // Calculate new stamps and points only from paid items (totalCups and pointsEarned already exclude free drinks)
     const newStamps = (state.stamps + order.totalCups) % 8;
     const earnedFreeDrink = (state.stamps + order.totalCups) >= 8;
     const newPoints = state.points + order.pointsEarned;
+    const newPendingFreeDrinks = earnedFreeDrink ? state.pendingFreeDrinks + 1 : state.pendingFreeDrinks;
     
     const completedOrder = { ...order, status: 'completed', completedDate: new Date().toISOString() };
     const newCurrentOrders = state.currentOrders.filter(o => o.id !== orderId);
     const newOrderHistory = [...state.orderHistory, completedOrder];
     
-    const newPointHistory = [
-      ...state.pointHistory,
-      {
+    // Create point history entries only if there were paid items
+    let newPointHistory = [...state.pointHistory];
+    
+    if (order.pointsEarned > 0) {
+      newPointHistory.push({
         id: Date.now().toString(),
         date: new Date().toISOString(),
-        description: `Order #${orderId.slice(-4)} completed - ${order.totalCups} drinks`,
+        description: `Order #${orderId.slice(-4)} completed - ${order.totalCups} paid drinks`,
         points: order.pointsEarned,
         type: 'earned'
-      },
-      ...(earnedFreeDrink ? [{
+      });
+    }
+    
+    if (earnedFreeDrink) {
+      newPointHistory.push({
         id: (Date.now() + 1).toString(),
         date: new Date().toISOString(),
         description: 'Free drink earned with 8 stamps!',
         points: 0,
         type: 'reward'
-      }] : [])
-    ];
+      });
+    }
+    
+    // Create a summary message for the completion
+    const paidCount = order.paidItemsCount || 0;
+    const freeCount = order.freeItemsCount || 0;
+    let summaryMessage = '';
+    
+    if (paidCount > 0 && freeCount > 0) {
+      summaryMessage = `Order completed: ${paidCount} paid drink${paidCount > 1 ? 's' : ''} + ${freeCount} free drink${freeCount > 1 ? 's' : ''}`;
+    } else if (paidCount > 0) {
+      summaryMessage = `Order completed: ${paidCount} paid drink${paidCount > 1 ? 's' : ''}`;
+    } else {
+      summaryMessage = `Order completed: ${freeCount} free drink${freeCount > 1 ? 's' : ''} (no rewards earned)`;
+    }
     
     set({
       currentOrders: newCurrentOrders,
       orderHistory: newOrderHistory,
       stamps: newStamps,
       points: newPoints,
-      pointHistory: newPointHistory
+      pointHistory: newPointHistory,
+      pendingFreeDrinks: newPendingFreeDrinks
     });
+    
+    console.log(summaryMessage);
+    if (order.pointsEarned > 0) {
+      console.log(`💰 Earned ${order.pointsEarned} points from paid items`);
+    }
+    if (order.totalCups > 0) {
+      console.log(`☕ Earned ${order.totalCups} stamps from paid items`);
+    }
+    if (earnedFreeDrink) {
+      console.log('🎉 Earned a free drink with 8 stamps!');
+    }
     
     await Promise.all([
       dataPersistenceService.saveCurrentOrders(newCurrentOrders),
@@ -239,6 +284,95 @@ export const useAppStore = create((set, get) => ({
       dataPersistenceService.saveCurrentOrders(newCurrentOrders),
       dataPersistenceService.saveOrderHistory(newOrderHistory)
     ]);
+  },
+
+  // Free Drink Redemption Functions
+  startFreeDrinkSelection: () => {
+    const state = get();
+    if (state.pendingFreeDrinks > 0) {
+      set({ isSelectingFreeDrink: true });
+      return true;
+    }
+    return false;
+  },
+  
+  cancelFreeDrinkSelection: () => {
+    set({ isSelectingFreeDrink: false });
+  },
+  
+  addFreeDrinkToCart: async (coffee) => {
+    const state = get();
+    if (!state.isSelectingFreeDrink || state.pendingFreeDrinks <= 0) {
+      return false;
+    }
+    
+    // Create free drink item with fixed small size and quantity 1
+    const freeDrinkItem = {
+      ...coffee,
+      size: { name: 'Small', multiplier: 1 }, // Fixed small size
+      sweetness: { name: 'Regular', value: 'regular' },
+      ice: { name: 'Regular Ice', value: 'regular' },
+      quantity: 1, // Fixed quantity
+      totalPrice: 0, // Free!
+      originalPrice: coffee.price,
+      customization: 'Small, Regular, Regular Ice',
+      isFree: true,
+      redemptionType: 'free_drink',
+      id: Date.now().toString()
+    };
+    
+    const newCartItems = [...state.cartItems, freeDrinkItem];
+    const newPendingFreeDrinks = state.pendingFreeDrinks - 1;
+    
+    set({ 
+      cartItems: newCartItems,
+      pendingFreeDrinks: newPendingFreeDrinks,
+      isSelectingFreeDrink: false
+    });
+    
+    // Save to storage
+    try {
+      await dataPersistenceService.saveCartItems(newCartItems);
+    } catch (error) {
+      console.warn('Failed to save cart items:', error);
+    }
+    
+    return true;
+  },
+  
+  redeemPointsForFreeDrink: async () => {
+    const state = get();
+    if (state.points < 100) {
+      return false;
+    }
+    
+    // Deduct points and add a pending free drink
+    const newPoints = state.points - 100;
+    const newPendingFreeDrinks = state.pendingFreeDrinks + 1;
+    const newPointHistory = [
+      ...state.pointHistory,
+      {
+        id: Date.now().toString(),
+        date: new Date().toISOString(),
+        description: 'Free drink redeemed with 100 points',
+        points: -100,
+        type: 'redeemed'
+      }
+    ];
+    
+    set({
+      points: newPoints,
+      pendingFreeDrinks: newPendingFreeDrinks,
+      pointHistory: newPointHistory,
+      isSelectingFreeDrink: true
+    });
+    
+    await Promise.all([
+      dataPersistenceService.savePoints(newPoints),
+      dataPersistenceService.savePointHistory(newPointHistory)
+    ]);
+    
+    return true;
   },
 
   // Data persistence and initialization methods
@@ -334,6 +468,8 @@ export const useAppStore = create((set, get) => ({
       stamps: 0,
       points: 0,
       pointHistory: [],
+      pendingFreeDrinks: 0,
+      isSelectingFreeDrink: false,
       currentOrders: [],
       orderHistory: [],
       isInitialized: false

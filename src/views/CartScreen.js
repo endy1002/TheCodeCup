@@ -13,6 +13,23 @@ export default function CartScreen() {
     return cartItems.reduce((total, item) => total + item.totalPrice, 0).toFixed(2);
   };
 
+  const calculateRewards = () => {
+    const paidItems = cartItems.filter(item => !item.isFree);
+    const freeItems = cartItems.filter(item => item.isFree);
+    const totalPaidAmount = paidItems.reduce((total, item) => total + item.totalPrice, 0);
+    const totalPaidCups = paidItems.reduce((total, item) => total + item.quantity, 0);
+    const pointsToEarn = Math.floor(totalPaidAmount * 5);
+    
+    return {
+      paidItems: paidItems.length,
+      freeItems: freeItems.length,
+      totalPaidAmount,
+      totalPaidCups,
+      pointsToEarn,
+      stampsToEarn: totalPaidCups
+    };
+  };
+
   const handleRemoveItem = (itemId) => {
     Alert.alert(
       'Remove Item',
@@ -48,21 +65,31 @@ export default function CartScreen() {
   };
 
   const renderCartItem = ({ item }) => (
-    <View style={styles.cartItem}>
+    <View style={[styles.cartItem, item.isFree && styles.freeCartItem]}>
       <View style={styles.imageContainer}>
         {item.image ? (
           <Image source={item.image} style={styles.coffeeImage} />
         ) : (
           <Text style={styles.imagePlaceholder}>☕</Text>
         )}
+        {item.isFree && (
+          <View style={styles.freeBadge}>
+            <Text style={styles.freeBadgeText}>FREE</Text>
+          </View>
+        )}
       </View>
       <View style={styles.itemInfo}>
         <Text style={styles.itemName}>{item.name}</Text>
         <Text style={styles.itemCustomization}>{item.customization}</Text>
         <Text style={styles.itemQuantity}>Quantity: {item.quantity}</Text>
+        {item.isFree && (
+          <Text style={styles.noRewardsText}>⚠️ No points/stamps earned</Text>
+        )}
       </View>
       <View style={styles.itemActions}>
-        <Text style={styles.itemPrice}>${item.totalPrice.toFixed(2)}</Text>
+        <Text style={[styles.itemPrice, item.isFree && styles.freePriceText]}>
+          {item.isFree ? 'FREE' : `$${item.totalPrice.toFixed(2)}`}
+        </Text>
         <TouchableOpacity 
           style={styles.removeButton}
           onPress={() => handleRemoveItem(item.id)}
@@ -119,6 +146,39 @@ export default function CartScreen() {
         renderItem={renderCartItem}
         contentContainerStyle={styles.listContainer}
       />
+
+      {/* Rewards Summary */}
+      {cartItems.length > 0 && (
+        <View style={styles.rewardsSummary}>
+          <Text style={styles.rewardsSummaryTitle}>Rewards for this order:</Text>
+          {(() => {
+            const rewards = calculateRewards();
+            return (
+              <View style={styles.rewardsDetails}>
+                {rewards.paidItems > 0 ? (
+                  <>
+                    <Text style={styles.rewardsText}>
+                      ☕ {rewards.stampsToEarn} stamp{rewards.stampsToEarn !== 1 ? 's' : ''} from {rewards.paidItems} paid item{rewards.paidItems !== 1 ? 's' : ''}
+                    </Text>
+                    <Text style={styles.rewardsText}>
+                      💰 {rewards.pointsToEarn} points from ${rewards.totalPaidAmount.toFixed(2)}
+                    </Text>
+                  </>
+                ) : (
+                  <Text style={styles.noRewardsText}>
+                    ⚠️ No rewards earned (only free items)
+                  </Text>
+                )}
+                {rewards.freeItems > 0 && (
+                  <Text style={styles.freeItemsNote}>
+                    🎁 {rewards.freeItems} free item{rewards.freeItems !== 1 ? 's' : ''} (no rewards)
+                  </Text>
+                )}
+              </View>
+            );
+          })()}
+        </View>
+      )}
 
       <View style={styles.footer}>
         <View style={styles.totalContainer}>
@@ -300,5 +360,69 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  // Free drink styles
+  freeCartItem: {
+    borderColor: '#4CAF50',
+    borderWidth: 2,
+    backgroundColor: '#F1F8E9',
+  },
+  freeBadge: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    backgroundColor: '#4CAF50',
+    borderRadius: 10,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  freeBadgeText: {
+    color: 'white',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  noRewardsText: {
+    fontSize: 11,
+    color: '#FF6B4A',
+    fontStyle: 'italic',
+    marginTop: 2,
+  },
+  freePriceText: {
+    color: '#4CAF50',
+    fontWeight: 'bold',
+  },
+  // Rewards summary styles
+  rewardsSummary: {
+    backgroundColor: '#fff',
+    margin: 16,
+    padding: 16,
+    borderRadius: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: '#2E8B57',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  rewardsSummaryTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 8,
+  },
+  rewardsDetails: {
+    marginLeft: 8,
+  },
+  rewardsText: {
+    fontSize: 14,
+    color: '#2E8B57',
+    marginBottom: 4,
+  },
+  freeItemsNote: {
+    fontSize: 12,
+    color: '#666',
+    fontStyle: 'italic',
+    marginTop: 4,
   },
 });
