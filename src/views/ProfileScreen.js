@@ -37,7 +37,12 @@ export default function ProfileScreen() {
         <View style={styles.headerCenter}>
           <Text style={styles.headerTitle}>Profile</Text>
         </View>
-        <View style={styles.headerRight} />
+        <TouchableOpacity 
+          style={styles.settingsButton}
+          onPress={() => navigation.navigate('Settings')}
+        >
+          <Text style={styles.settingsButtonText}>⚙️</Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content}>
@@ -123,6 +128,17 @@ const styles = StyleSheet.create({
   },
   headerRight: {
     flex: 1,
+  },
+  settingsButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 20,
+  },
+  settingsButtonText: {
+    fontSize: 20,
   },
   headerTitle: {
     fontSize: 20,

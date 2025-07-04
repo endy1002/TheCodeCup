@@ -4,6 +4,7 @@ import DetailsScreen from '../views/DetailsScreen';
 import CartScreen from '../views/CartScreen';
 import ProfileScreen from '../views/ProfileScreen';
 import OrderSuccessScreen from '../views/OrderSuccessScreen';
+import SettingsScreen from '../views/SettingsScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -19,6 +20,7 @@ export default function AppNavigator() {
       <Stack.Screen name="Cart" component={CartScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
       <Stack.Screen name="OrderSuccess" component={OrderSuccessScreen} />
+      <Stack.Screen name="Settings" component={SettingsScreen} />
     </Stack.Navigator>
   );
 }

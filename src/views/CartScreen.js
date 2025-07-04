@@ -2,10 +2,12 @@ import React from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, SafeAreaView, Alert, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAppStore } from '../viewmodels/useCartViewModel';
+import { useDataPersistence } from '../hooks/useDataPersistence';
 
 export default function CartScreen() {
   const navigation = useNavigation();
   const { cartItems, removeFromCart, placeOrder } = useAppStore();
+  const { forceSave } = useDataPersistence();
 
   const calculateTotal = () => {
     return cartItems.reduce((total, item) => total + item.totalPrice, 0).toFixed(2);
@@ -35,8 +37,9 @@ export default function CartScreen() {
         { text: 'No', style: 'cancel' },
         { 
           text: 'Yes', 
-          onPress: () => {
-            const orderId = placeOrder(cartItems);
+          onPress: async () => {
+            const orderId = await placeOrder(cartItems);
+            await forceSave(); // Force save after placing order
             navigation.navigate('OrderSuccess', { orderId });
           }
         }

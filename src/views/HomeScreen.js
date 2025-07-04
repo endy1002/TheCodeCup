@@ -241,7 +241,7 @@ export default function HomeScreen() {
             style={[styles.navButton, activeBottomTab === 'menu' && styles.activeNavButton]}
             onPress={() => setActiveBottomTab('menu')}
           >
-            <Text style={[styles.navIcon, activeBottomTab === 'menu' && styles.activeNavIcon]}>☕</Text>
+            <Text style={[styles.navTextIcon, activeBottomTab === 'menu' && styles.activeNavTextIcon]}>☕</Text>
             <Text style={[styles.navLabel, activeBottomTab === 'menu' && styles.activeNavLabel]}>Menu</Text>
           </TouchableOpacity>
           
@@ -249,7 +249,7 @@ export default function HomeScreen() {
             style={[styles.navButton, activeBottomTab === 'membership' && styles.activeNavButton]}
             onPress={() => setActiveBottomTab('membership')}
           >
-            <Text style={[styles.navIcon, activeBottomTab === 'membership' && styles.activeNavIcon]}>⭐</Text>
+            <Text style={[styles.navTextIcon, activeBottomTab === 'membership' && styles.activeNavTextIcon]}>⭐</Text>
             <Text style={[styles.navLabel, activeBottomTab === 'membership' && styles.activeNavLabel]}>Membership</Text>
           </TouchableOpacity>
           
@@ -324,13 +324,21 @@ const styles = StyleSheet.create({
   navButton: {
     flex: 1,
     alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: 8,
+    minHeight: 60,
   },
   navIcon: {
     width: 24,
     height: 24,
     marginBottom: 4,
     resizeMode: 'contain',
+  },
+  navTextIcon: {
+    fontSize: 24,
+    marginBottom: 4,
+    lineHeight: 24,
+    textAlign: 'center',
   },
   navLabel: {
     fontSize: 12,
@@ -343,6 +351,9 @@ const styles = StyleSheet.create({
   },
   activeNavIcon: {
     tintColor: '#6B4E3D',
+  },
+  activeNavTextIcon: {
+    color: '#6B4E3D',
   },
   activeNavLabel: {
     color: '#6B4E3D',
