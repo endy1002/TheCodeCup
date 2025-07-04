@@ -7,7 +7,8 @@ export default function ProfileScreen() {
   const navigation = useNavigation();
   const { 
     userProfile, 
-    updateProfile
+    updateProfile,
+    clearAllData
   } = useAppStore();
   
   const [editingField, setEditingField] = useState(null);
@@ -23,6 +24,45 @@ export default function ProfileScreen() {
     setEditingField(null);
     setEditValue('');
     Alert.alert('Success', 'Profile updated successfully!');
+  };
+
+  const handleSwitchUser = () => {
+    Alert.alert(
+      'Switch User',
+      'This will clear all current user data including cart, orders, points, and stamps. Are you sure you want to continue?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Switch User',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              console.log('🔄 Switching user - clearing all data...');
+              await clearAllData();
+              Alert.alert(
+                'Success', 
+                'All data cleared! You can now set up a new user profile.',
+                [
+                  {
+                    text: 'OK',
+                    onPress: () => {
+                      // Reset navigation to Home screen
+                      navigation.reset({
+                        index: 0,
+                        routes: [{ name: 'Home' }],
+                      });
+                    }
+                  }
+                ]
+              );
+            } catch (error) {
+              console.error('Failed to switch user:', error);
+              Alert.alert('Error', 'Failed to switch user: ' + error.message);
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -63,6 +103,18 @@ export default function ProfileScreen() {
             </View>
           ))}
         </View>
+        
+        {/* User Management Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>User Management</Text>
+          <TouchableOpacity 
+            style={styles.switchUserButton}
+            onPress={handleSwitchUser}
+          >
+            <Text style={styles.switchUserButtonText}>🔄 Switch User</Text>
+            <Text style={styles.switchUserSubtext}>Clear all data and start fresh</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
 
       {/* Edit Profile */}
@@ -95,6 +147,16 @@ export default function ProfileScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Switch User Button - Always visible */}
+      <View style={styles.switchUserContainer}>
+        <TouchableOpacity 
+          style={styles.switchUserButton}
+          onPress={handleSwitchUser}
+        >
+          <Text style={styles.switchUserButtonText}>Switch User</Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 }
@@ -256,5 +318,33 @@ const styles = StyleSheet.create({
     color: '#fff',
     textAlign: 'center',
     fontWeight: '600',
+  },
+  switchUserContainer: {
+    padding: 16,
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
+  },
+  switchUserButton: {
+    backgroundColor: '#FF6B4A',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 8,
+    borderWidth: 2,
+    borderColor: '#FF3D00',
+  },
+  switchUserButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  switchUserSubtext: {
+    color: '#FFE4E1',
+    fontSize: 12,
+    fontWeight: '400',
+    textAlign: 'center',
   },
 });

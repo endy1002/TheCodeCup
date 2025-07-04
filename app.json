@@ -7,9 +7,6 @@
     "splash": {
       "backgroundColor": "#ffffff"
     },
-    "plugins": [
-      "@react-native-async-storage/async-storage"
-    ],
     "android": {
       "permissions": [
         "android.permission.WRITE_EXTERNAL_STORAGE",

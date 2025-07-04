@@ -10,7 +10,7 @@ const StorageStatusIndicator = () => {
     const getStorageInfo = async () => {
       // Give storage service time to initialize
       setTimeout(async () => {
-        const info = robustStorage.getStorageInfo();
+        const info = await robustStorage.getStorageHealth();
         setStorageInfo(info);
       }, 1000);
     };

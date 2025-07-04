@@ -32,8 +32,8 @@ const SettingsScreen = ({ navigation }) => {
 
   useEffect(() => {
     // Get storage information
-    const getStorageInfo = () => {
-      const info = robustStorage.getStorageInfo();
+    const getStorageInfo = async () => {
+      const info = await robustStorage.getStorageHealth();
       setStorageInfo(info);
     };
     
@@ -220,6 +220,53 @@ const SettingsScreen = ({ navigation }) => {
     );
   };
 
+  const handleClearDataForLogin = () => {
+    Alert.alert(
+      'Switch User Session',
+      'This will clear all user data including cart, orders, points, stamps, and profile information. This is useful when switching to a different user account.\n\nAre you sure you want to continue?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Clear & Switch User',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              console.log('🔄 Clearing user session data...');
+              await clearAllData();
+              Alert.alert(
+                'Session Cleared', 
+                'All user data has been cleared. You can now set up a new user session.',
+                [
+                  {
+                    text: 'Go to Profile',
+                    onPress: () => {
+                      navigation.reset({
+                        index: 0,
+                        routes: [{ name: 'Profile' }],
+                      });
+                    }
+                  },
+                  {
+                    text: 'Go to Home',
+                    onPress: () => {
+                      navigation.reset({
+                        index: 0,
+                        routes: [{ name: 'Home' }],
+                      });
+                    }
+                  }
+                ]
+              );
+            } catch (error) {
+              console.error('Failed to clear user session:', error);
+              Alert.alert('Error', 'Failed to clear user session: ' + error.message);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Data & Settings</Text>
@@ -264,6 +311,25 @@ const SettingsScreen = ({ navigation }) => {
           <Text style={styles.summaryText}>Points: {dataSummary.totalPoints}</Text>
           <Text style={styles.summaryText}>Stamps: {dataSummary.stamps}/8</Text>
         </View>
+      </View>
+
+      {/* User Management */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>User Management</Text>
+        
+        <TouchableOpacity 
+          style={[styles.button, styles.primaryButton]} 
+          onPress={() => navigation.navigate('Profile')}
+        >
+          <Text style={[styles.buttonText, styles.primaryText]}>👤 Manage User Profile</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={[styles.button, styles.warningButton]} 
+          onPress={handleClearDataForLogin}
+        >
+          <Text style={[styles.buttonText, styles.warningText]}>🔄 Switch User / Clear Session</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Data Management */}
@@ -493,6 +559,18 @@ const styles = StyleSheet.create({
   },
   diagnosticsButton: {
     backgroundColor: '#9C27B0',
+  },
+  primaryButton: {
+    backgroundColor: '#4CAF50',
+  },
+  primaryText: {
+    color: '#FFFFFF',
+  },
+  warningButton: {
+    backgroundColor: '#FFC107',
+  },
+  warningText: {
+    color: '#8B4513',
   },
 });
 

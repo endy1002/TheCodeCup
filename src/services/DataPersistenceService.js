@@ -1,4 +1,5 @@
 import robustStorage from './RobustStorageService';
+import { Platform } from 'react-native';
 
 // Storage keys for different data types
 const STORAGE_KEYS = {
@@ -26,19 +27,23 @@ class DataPersistenceService {
       try {
         const result = await robustStorage.setItem(key, value);
         if (result.success) {
-          // Only log in development mode to reduce noise
+          // Only log memory storage in development mode to reduce noise
           if (__DEV__ && result.method !== 'AsyncStorage') {
-            console.log(`💾 ${key} saved using ${result.method} (attempt ${attempt})`);
+            // Reduce frequency of memory storage logs
+            const shouldLog = Math.random() < 0.1 || key.includes('userProfile'); // Log 10% of operations or important keys
+            if (shouldLog) {
+              console.log(`💾 ${key} saved using ${result.method} (attempt ${attempt})`);
+            }
           }
           return true;
         }
         
         if (attempt < this.retryAttempts) {
-          console.warn(`Retry ${attempt} for ${key} failed, attempting again...`);
+          if (__DEV__) console.warn(`Retry ${attempt} for ${key} failed, attempting again...`);
           await new Promise(resolve => setTimeout(resolve, this.retryDelay));
         }
       } catch (error) {
-        console.error(`Storage operation failed for ${key} (attempt ${attempt}):`, error);
+        if (__DEV__) console.error(`Storage operation failed for ${key} (attempt ${attempt}):`, error);
         
         if (attempt < this.retryAttempts) {
           await new Promise(resolve => setTimeout(resolve, this.retryDelay));
@@ -46,7 +51,7 @@ class DataPersistenceService {
       }
     }
     
-    console.error(`All ${this.retryAttempts} attempts failed for ${key}`);
+    if (__DEV__) console.error(`All ${this.retryAttempts} attempts failed for ${key}`);
     return false;
   }
 
@@ -323,18 +328,20 @@ class DataPersistenceService {
   // Clear all app data (for logout or reset)
   async clearAllData() {
     try {
-      const keys = Object.values(STORAGE_KEYS);
-      const result = await robustStorage.multiRemove(keys);
+      console.log('🗑️ Starting complete data clearance...');
+      
+      // Use the robust storage clear method that handles both AsyncStorage and memory
+      const result = await robustStorage.clearAllAppData();
       
       if (result.success) {
         console.log('✅ All app data cleared successfully');
       } else {
-        console.warn('⚠️ Some data may not have been cleared properly');
+        console.warn('⚠️ Some data may not have been cleared properly:', result.error);
       }
       
-      return true; // Always return true since fallback ensures some cleanup
+      return result.success;
     } catch (error) {
-      console.error('Error clearing app data:', error);
+      console.error('❌ Error clearing app data:', error);
       return false;
     }
   }

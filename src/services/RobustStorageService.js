@@ -1,5 +1,6 @@
 // Enhanced storage service that handles Expo/simulator storage issues
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 
 class RobustStorageService {
   constructor() {
@@ -16,42 +17,75 @@ class RobustStorageService {
       return this.isAsyncStorageAvailable;
     }
 
-    for (let attempt = 1; attempt <= this.retryAttempts; attempt++) {
-      try {
-        const testKey = '@CodeCup:test_' + Date.now();
-        const testValue = 'test_' + attempt;
-        
-        // Add timeout for the test
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('AsyncStorage test timeout')), 5000)
-        );
-        
-        const testPromise = (async () => {
-          await AsyncStorage.setItem(testKey, testValue);
-          const retrieved = await AsyncStorage.getItem(testKey);
-          await AsyncStorage.removeItem(testKey);
-          return retrieved;
-        })();
-        
-        const retrieved = await Promise.race([testPromise, timeoutPromise]);
-        
-        if (retrieved === testValue) {
-          this.isAsyncStorageAvailable = true;
-          this.storageType = 'AsyncStorage';
-          console.log(`✅ AsyncStorage is working correctly (attempt ${attempt})`);
-          return true;
+    // Single test first to avoid spam
+    try {
+      const testKey = '@CodeCup:test_' + Date.now();
+      const testValue = 'test_single';
+      
+      await AsyncStorage.setItem(testKey, testValue);
+      const retrieved = await AsyncStorage.getItem(testKey);
+      await AsyncStorage.removeItem(testKey);
+      
+      if (retrieved === testValue) {
+        this.isAsyncStorageAvailable = true;
+        this.storageType = 'AsyncStorage';
+        if (__DEV__) console.log('✅ AsyncStorage is working correctly');
+        return true;
+      }
+    } catch (error) {
+      // Detect iOS simulator specific errors to reduce spam
+      const isIOSSimulatorError = error.message.includes('ExponentExperienceData') || 
+                                  error.message.includes('NSCocoaErrorDomain') ||
+                                  error.message.includes('Not a directory');
+      
+      if (isIOSSimulatorError) {
+        this.isAsyncStorageAvailable = false;
+        this.storageType = 'MemoryStorage';
+        if (__DEV__) {
+          console.log('📱 iOS Simulator detected - using memory storage (normal behavior)');
         }
-      } catch (error) {
-        console.warn(`⚠️ AsyncStorage test attempt ${attempt} failed:`, error.message);
-        if (attempt < this.retryAttempts) {
-          await new Promise(resolve => setTimeout(resolve, this.retryDelay * attempt));
+        return false;
+      } else {
+        // For other errors, do retry logic
+        for (let attempt = 1; attempt <= this.retryAttempts; attempt++) {
+          try {
+            const testKey = '@CodeCup:test_' + Date.now() + '_' + attempt;
+            const testValue = 'test_' + attempt;
+            
+            const timeoutPromise = new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('AsyncStorage test timeout')), 5000)
+            );
+            
+            const testPromise = (async () => {
+              await AsyncStorage.setItem(testKey, testValue);
+              const retrieved = await AsyncStorage.getItem(testKey);
+              await AsyncStorage.removeItem(testKey);
+              return retrieved;
+            })();
+            
+            const retrieved = await Promise.race([testPromise, timeoutPromise]);
+            
+            if (retrieved === testValue) {
+              this.isAsyncStorageAvailable = true;
+              this.storageType = 'AsyncStorage';
+              console.log(`✅ AsyncStorage is working correctly (attempt ${attempt})`);
+              return true;
+            }
+          } catch (retryError) {
+            if (__DEV__ && attempt === this.retryAttempts) {
+              console.warn(`⚠️ AsyncStorage test failed after ${this.retryAttempts} attempts`);
+            }
+            if (attempt < this.retryAttempts) {
+              await new Promise(resolve => setTimeout(resolve, this.retryDelay * attempt));
+            }
+          }
         }
       }
     }
 
     this.isAsyncStorageAvailable = false;
     this.storageType = 'MemoryStorage';
-    console.log('📝 Using memory storage fallback after all attempts failed');
+    if (__DEV__) console.log('📝 Using memory storage fallback after all attempts failed');
     return false;
   }
 
@@ -146,6 +180,41 @@ class RobustStorageService {
     }
   }
 
+  async clearAllAppData() {
+    try {
+      console.log('🗑️ Clearing all app data...');
+      
+      // Clear AsyncStorage if available
+      if (await this.testAsyncStorage()) {
+        await AsyncStorage.clear();
+        console.log('✅ AsyncStorage cleared');
+      }
+      
+      // Clear memory storage
+      this.memoryStore.clear();
+      console.log('✅ Memory storage cleared');
+      
+      // Reset storage service state
+      this.isAsyncStorageAvailable = null;
+      this.storageType = 'unknown';
+      
+      console.log('🎉 All app data cleared successfully');
+      return { success: true, clearedStorage: true };
+    } catch (error) {
+      console.error('❌ Failed to clear app data:', error.message);
+      
+      // Fallback: at least clear memory storage
+      try {
+        this.memoryStore.clear();
+        console.log('⚠️ Memory storage cleared as fallback');
+        return { success: true, clearedStorage: false, error: error.message };
+      } catch (fallbackError) {
+        console.error('❌ Complete failure to clear data:', fallbackError.message);
+        return { success: false, error: fallbackError.message };
+      }
+    }
+  }
+
   // Force re-test of AsyncStorage (useful for debugging and recovery)
   async retestAsyncStorage() {
     this.isAsyncStorageAvailable = null;
@@ -155,7 +224,15 @@ class RobustStorageService {
     if (result) {
       console.log('🔄 AsyncStorage retest successful - switched to persistent storage');
     } else {
-      console.log('🔄 AsyncStorage retest failed - remaining on memory storage');
+      // Provide more context about why retest failed
+      const isSimulator = Platform.OS === 'ios' && __DEV__;
+      if (isSimulator) {
+        if (__DEV__) {
+          console.log('🔄 AsyncStorage retest failed - remaining on memory storage (normal in iOS Simulator)');
+        }
+      } else {
+        console.log('🔄 AsyncStorage retest failed - remaining on memory storage');
+      }
     }
     
     return result;
