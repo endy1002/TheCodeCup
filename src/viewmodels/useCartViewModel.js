@@ -81,12 +81,15 @@ export const useAppStore = create((set, get) => ({
     const orderId = Date.now().toString();
     const totalAmount = items.reduce((sum, item) => sum + item.totalPrice, 0);
     const pointsEarned = Math.floor(totalAmount * 5); // 1$ = 5 points
+    const totalCups = items.reduce((sum, item) => sum + item.quantity, 0); // Calculate total cups
     
     set((state) => {
       const newOrder = {
         id: orderId,
         items: items,
         totalAmount,
+        pointsEarned, // Store for later when order is completed
+        totalCups, // Store for later when order is completed
         status: 'in-process',
         orderDate: new Date().toISOString(),
         estimatedTime: '15-20 mins'
@@ -94,19 +97,8 @@ export const useAppStore = create((set, get) => ({
       
       return {
         currentOrders: [...state.currentOrders, newOrder],
-        cartItems: [],
-        stamps: (state.stamps + 1) % 8,
-        points: state.points + pointsEarned,
-        pointHistory: [
-          ...state.pointHistory,
-          {
-            id: Date.now().toString(),
-            date: new Date().toISOString(),
-            description: `Order #${orderId.slice(-4)} - ${items.length} items`,
-            points: pointsEarned,
-            type: 'earned'
-          }
-        ]
+        cartItems: []
+        // Removed stamps and points logic - will be added when order is completed
       };
     });
     
@@ -117,9 +109,33 @@ export const useAppStore = create((set, get) => ({
     set((state) => {
       const order = state.currentOrders.find(o => o.id === orderId);
       if (!order) return state;
+      
+      // Calculate new stamps, considering the 8-stamp reset cycle
+      const newStamps = (state.stamps + order.totalCups) % 8;
+      const earnedFreeDrink = (state.stamps + order.totalCups) >= 8;
+      
       return {
         currentOrders: state.currentOrders.filter(o => o.id !== orderId),
-        orderHistory: [...state.orderHistory, { ...order, status: 'completed', completedDate: new Date().toISOString() }]
+        orderHistory: [...state.orderHistory, { ...order, status: 'completed', completedDate: new Date().toISOString() }],
+        stamps: newStamps,
+        points: state.points + order.pointsEarned,
+        pointHistory: [
+          ...state.pointHistory,
+          {
+            id: Date.now().toString(),
+            date: new Date().toISOString(),
+            description: `Order #${orderId.slice(-4)} completed - ${order.totalCups} drinks`,
+            points: order.pointsEarned,
+            type: 'earned'
+          },
+          ...(earnedFreeDrink ? [{
+            id: (Date.now() + 1).toString(),
+            date: new Date().toISOString(),
+            description: 'Free drink earned with 8 stamps!',
+            points: 0,
+            type: 'reward'
+          }] : [])
+        ]
       };
     }),
     

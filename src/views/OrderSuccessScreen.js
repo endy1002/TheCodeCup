@@ -40,14 +40,15 @@ export default function OrderSuccessScreen() {
         </View>
         
         <View style={styles.rewardsContainer}>
-          <Text style={styles.rewardsTitle}>Rewards Earned!</Text>
+          <Text style={styles.rewardsTitle}>Rewards to be Earned!</Text>
+          <Text style={styles.rewardsSubtitle}>Complete your order to earn rewards</Text>
           <View style={styles.rewardItem}>
             <Text style={styles.rewardIcon}>⭐</Text>
-            <Text style={styles.rewardText}>+1 Stamp ({stamps}/8)</Text>
+            <Text style={styles.rewardText}>Stamps to earn when completed</Text>
           </View>
           <View style={styles.rewardItem}>
             <Text style={styles.rewardIcon}>🎯</Text>
-            <Text style={styles.rewardText}>Points earned (Total: {points})</Text>
+            <Text style={styles.rewardText}>Points to earn when completed</Text>
           </View>
         </View>
         
@@ -153,8 +154,15 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  rewardsSubtitle: {
+    fontSize: 14,
+    color: '#666',
     marginBottom: 12,
     textAlign: 'center',
+    fontStyle: 'italic',
   },
   rewardItem: {
     flexDirection: 'row',

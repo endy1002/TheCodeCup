@@ -5,7 +5,6 @@ export default function Header({ title, showProfile = false, onProfilePress, sho
   return (
     <View style={styles.header}>
       <View style={styles.leftSection}>
-        <Text style={styles.logo}>☕ The Code Cup</Text>
       </View>
       
       <Text style={styles.title}>{title}</Text>

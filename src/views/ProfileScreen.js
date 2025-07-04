@@ -34,7 +34,10 @@ export default function ProfileScreen() {
         >
           <Text style={styles.backButtonText}>← Back</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Profile</Text>
+        <View style={styles.headerCenter}>
+          <Text style={styles.headerTitle}>Profile</Text>
+        </View>
+        <View style={styles.headerRight} />
       </View>
 
       <ScrollView style={styles.content}>
@@ -54,22 +57,6 @@ export default function ProfileScreen() {
               </TouchableOpacity>
             </View>
           ))}
-        </View>
-        
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>App Information</Text>
-          <Text style={styles.infoText}>
-            Welcome to The Code Cup! Track your orders and manage your membership from the home screen.
-          </Text>
-          <Text style={styles.infoText}>
-            • Use the Orders tab to track your current orders
-          </Text>
-          <Text style={styles.infoText}>
-            • Check your membership status and points in the Membership tab
-          </Text>
-          <Text style={styles.infoText}>
-            • Browse our menu anytime from the Menu tab
-          </Text>
         </View>
       </ScrollView>
 
@@ -115,6 +102,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
     backgroundColor: '#fff',
@@ -122,12 +110,19 @@ const styles = StyleSheet.create({
     borderBottomColor: '#e0e0e0',
   },
   backButton: {
-    marginRight: 16,
+    flex: 1,
   },
   backButtonText: {
     fontSize: 16,
     color: '#6B4E3D',
     fontWeight: '600',
+  },
+  headerCenter: {
+    flex: 2,
+    alignItems: 'center',
+  },
+  headerRight: {
+    flex: 1,
   },
   headerTitle: {
     fontSize: 20,

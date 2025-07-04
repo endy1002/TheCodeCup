@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Alert } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Alert, Image } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useAppStore } from '../viewmodels/useCartViewModel';
 import { COFFEE_DATA } from '../models/Coffee';
@@ -84,8 +84,9 @@ export default function HomeScreen() {
 
   const renderMenuSection = () => (
     <View style={styles.menuSection}>
-      <Text style={styles.welcomeText}>Welcome to The Code Cup!</Text>
-      <Text style={styles.subtitle}>Choose your perfect brew</Text>
+      <View style={styles.welcomeTextBox}>
+        <Text style={styles.welcomeText}>Welcome to The Code Cup</Text>
+      </View>
       
       <FlatList
         data={COFFEE_DATA}
@@ -141,11 +142,9 @@ export default function HomeScreen() {
         {pointHistory.length === 0 ? (
           <Text style={styles.emptyText}>No point history yet</Text>
         ) : (
-          <FlatList
-            data={pointHistory.slice(-5)}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <View style={styles.historyItem}>
+          <View>
+            {pointHistory.slice(-5).map((item) => (
+              <View key={item.id} style={styles.historyItem}>
                 <View>
                   <Text style={styles.historyDescription}>{item.description}</Text>
                   <Text style={styles.historyDate}>{new Date(item.date).toLocaleDateString()}</Text>
@@ -154,8 +153,8 @@ export default function HomeScreen() {
                   {item.points > 0 ? '+' : ''}{item.points}
                 </Text>
               </View>
-            )}
-          />
+            ))}
+          </View>
         )}
       </View>
     </ScrollView>
@@ -258,7 +257,10 @@ export default function HomeScreen() {
             style={[styles.navButton, activeBottomTab === 'orders' && styles.activeNavButton]}
             onPress={() => setActiveBottomTab('orders')}
           >
-            <Text style={[styles.navIcon, activeBottomTab === 'orders' && styles.activeNavIcon]}>�</Text>
+            <Image 
+              source={require('../../assets/orders.png')} 
+              style={[styles.navIcon, activeBottomTab === 'orders' && styles.activeNavIcon]} 
+            />
             <Text style={[styles.navLabel, activeBottomTab === 'orders' && styles.activeNavLabel]}>Orders</Text>
           </TouchableOpacity>
         </View>
@@ -279,9 +281,24 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginTop: 20,
     marginBottom: 8,
     color: '#333',
+  },
+  welcomeTextBox: {
+    borderWidth: 2,
+    borderColor: '#8B4513',
+    borderRadius: 12,
+    padding: 16,
+    margin: 20,
+    backgroundColor: '#f8f9fa',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   subtitle: {
     fontSize: 16,
@@ -310,8 +327,10 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   navIcon: {
-    fontSize: 24,
+    width: 24,
+    height: 24,
     marginBottom: 4,
+    resizeMode: 'contain',
   },
   navLabel: {
     fontSize: 12,
@@ -323,7 +342,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   activeNavIcon: {
-    color: '#6B4E3D',
+    tintColor: '#6B4E3D',
   },
   activeNavLabel: {
     color: '#6B4E3D',
