@@ -153,7 +153,6 @@ const SettingsScreen = ({ navigation }) => {
                 ]
               );
             } catch (error) {
-              console.error('Failed to clear user session:', error);
               Alert.alert('Error', 'Failed to clear user session: ' + error.message);
             }
           },

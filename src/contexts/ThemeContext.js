@@ -117,7 +117,7 @@ export const ThemeProvider = ({ children }) => {
         setIsDarkMode(savedTheme === 'dark');
       }
     } catch (error) {
-      console.warn('Failed to load theme preference:', error);
+      // Failed to load theme preference silently
     } finally {
       setIsLoading(false);
     }
@@ -128,9 +128,8 @@ export const ThemeProvider = ({ children }) => {
       const newTheme = !isDarkMode;
       setIsDarkMode(newTheme);
       await AsyncStorage.setItem('@CodeCup:theme', newTheme ? 'dark' : 'light');
-      console.log(`🎨 Theme switched to ${newTheme ? 'dark' : 'light'} mode`);
     } catch (error) {
-      console.warn('Failed to save theme preference:', error);
+      // Failed to save theme preference silently
     }
   };
 

@@ -4,7 +4,6 @@ export const safeStorageOperation = async (operation, operationName = 'storage o
     const result = await operation();
     return { success: true, result };
   } catch (error) {
-    console.warn(`${operationName} failed:`, error);
     return { success: false, error };
   }
 };

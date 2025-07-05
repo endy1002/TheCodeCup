@@ -2,7 +2,6 @@ import React, { useEffect } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { useAppStore } from '../viewmodels/useCartViewModel';
 import { DataPersistenceProvider } from '../hooks/useDataPersistence';
-import StorageStatusIndicator from './StorageStatusIndicator';
 
 const AppInitializer = ({ children }) => {
   const { isLoading, isInitialized, initializeApp } = useAppStore();
@@ -12,7 +11,7 @@ const AppInitializer = ({ children }) => {
       try {
         await initializeApp();
       } catch (error) {
-        console.error('Failed to initialize app:', error);
+        // App initialization failed silently
       }
     };
 
@@ -32,7 +31,6 @@ const AppInitializer = ({ children }) => {
   return (
     <DataPersistenceProvider>
       {children}
-      <StorageStatusIndicator />
     </DataPersistenceProvider>
   );
 };

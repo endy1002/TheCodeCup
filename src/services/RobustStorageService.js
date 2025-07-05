@@ -74,14 +74,11 @@ class RobustStorageService {
         return jsonValue != null ? JSON.parse(jsonValue) : defaultValue;
       }
     } catch (error) {
-      console.error(`Storage getItem failed for ${key}:`, error.message);
-      
       // Try memory storage
       try {
         const jsonValue = this.memoryStore.get(key);
         return jsonValue != null ? JSON.parse(jsonValue) : defaultValue;
       } catch (fallbackError) {
-        console.error(`Memory storage fallback failed for ${key}:`, fallbackError.message);
         return defaultValue;
       }
     }
@@ -121,7 +118,6 @@ class RobustStorageService {
       this.memoryStore.clear();
       return { success: true };
     } catch (error) {
-      console.error('Storage clear failed:', error.message);
       this.memoryStore.clear();
       return { success: false, error };
     }
@@ -129,12 +125,9 @@ class RobustStorageService {
 
   async clearAllAppData() {
     try {
-      console.log('🗑️ Clearing all app data...');
-      
       // Clear AsyncStorage if available
       if (await this.testAsyncStorage()) {
         await AsyncStorage.clear();
-        console.log('✅ AsyncStorage cleared');
       }
       
       // Clear memory storage

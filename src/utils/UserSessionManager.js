@@ -18,9 +18,7 @@ class UserSessionManager {
             style: 'destructive',
             onPress: async () => {
               try {
-                console.log('🗑️ Clearing data for new user session...');
                 await clearAllDataFn();
-                console.log('✅ Data cleared successfully for new session');
                 
                 if (navigationFn) {
                   navigationFn();
@@ -28,7 +26,6 @@ class UserSessionManager {
                 
                 resolve(true);
               } catch (error) {
-                console.error('❌ Failed to clear data:', error);
                 Alert.alert('Error', 'Failed to clear data: ' + error.message);
                 resolve(false);
               }
@@ -41,31 +38,18 @@ class UserSessionManager {
 
   static async clearDataForNewUser(clearAllDataFn) {
     try {
-      console.log('🔄 Automatically clearing data for new user...');
       await clearAllDataFn();
-      console.log('✅ Data cleared successfully for new user');
       return true;
     } catch (error) {
-      console.error('❌ Failed to clear data for new user:', error);
       return false;
     }
   }
 
   static shouldPromptDataClear() {
-    // This could be enhanced to detect various conditions:
-    // - App hasn't been used for a long time
-    // - Different device characteristics
-    // - User preference settings
-    // For now, we'll keep it simple and let the user decide
     return false;
   }
 
   static logLoginEvent(userProfile) {
-    console.log('👤 User login/session started:', {
-      user: userProfile?.name || 'Unknown',
-      email: userProfile?.email || 'No email',
-      timestamp: new Date().toISOString()
-    });
   }
 }
 

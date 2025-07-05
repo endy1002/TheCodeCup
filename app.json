@@ -19,11 +19,7 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#8B4513"
-      },
-      "permissions": [
-        "android.permission.WRITE_EXTERNAL_STORAGE",
-        "android.permission.READ_EXTERNAL_STORAGE"
-      ]
+      }
     },
     "ios": {
       "supportsTablet": true,
@@ -36,6 +32,9 @@
       "storageConfig": {
         "enableFallback": true,
         "retryAttempts": 3
+      },
+      "eas": {
+        "projectId": "54d85898-55e5-4231-be5e-7af04f5041be"
       }
     }
   }
