@@ -4,7 +4,7 @@
     "slug": "thecodecup",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/icon_square.png",
     "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/icon.png",
@@ -14,10 +14,14 @@
     "assetBundlePatterns": [
       "**/*"
     ],
+    "plugins": [
+      "expo-font"
+    ],
     "android": {
       "package": "com.codecup.thecodecup",
+      "versionCode": 1,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icon.png",
+        "foregroundImage": "./assets/icon_square.png",
         "backgroundColor": "#8B4513"
       }
     },
