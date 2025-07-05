@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Image } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useAppStore } from '../viewmodels/useCartViewModel';
 
@@ -20,9 +20,11 @@ export default function OrderSuccessScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <View style={styles.successIcon}>
-          <Text style={styles.iconText}>✅</Text>
-        </View>
+        <Image 
+          source={require('../../assets/take-away.png')} 
+          style={styles.successIcon}
+          resizeMode="contain"
+        />
         
         <Text style={styles.title}>Order Placed Successfully!</Text>
         
@@ -84,16 +86,9 @@ const styles = StyleSheet.create({
     padding: 32,
   },
   successIcon: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: '#2E8B57',
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: 150,
+    height: 150,
     marginBottom: 24,
-  },
-  iconText: {
-    fontSize: 60,
   },
   title: {
     fontSize: 28,

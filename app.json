@@ -4,10 +4,22 @@
     "slug": "thecodecup",
     "version": "1.0.0",
     "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
     "splash": {
-      "backgroundColor": "#ffffff"
+      "image": "./assets/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#8B4513"
     },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "android": {
+      "package": "com.codecup.thecodecup",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#8B4513"
+      },
       "permissions": [
         "android.permission.WRITE_EXTERNAL_STORAGE",
         "android.permission.READ_EXTERNAL_STORAGE"
@@ -16,6 +28,9 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.codecup.app"
+    },
+    "web": {
+      "favicon": "./assets/icon.png"
     },
     "extra": {
       "storageConfig": {

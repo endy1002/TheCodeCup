@@ -134,13 +134,19 @@ export default function CartScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <StatusBar barStyle={theme.statusBarStyle} backgroundColor={theme.background} />
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={[styles.backButtonText, { color: theme.primary }]}>← Back</Text>
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: theme.text }]}>Your Cart ({cartItems.length})</Text>
+        <View style={styles.headerLeft}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Text style={[styles.backButtonText, { color: theme.primary }]}>← Back</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.headerCenter}>
+          <Text style={[styles.headerTitle, { color: theme.text }]}>Your Cart ({cartItems.length})</Text>
+        </View>
+        <View style={styles.headerRight}>
+        </View>
       </View>
 
       <FlatList
@@ -209,23 +215,40 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    minHeight: 56,
+  },
+  headerLeft: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  headerCenter: {
+    flex: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerRight: {
+    flex: 1,
+    alignItems: 'flex-end',
+    justifyContent: 'center',
   },
   backButton: {
-    marginRight: 16,
+    paddingVertical: 8,
   },
   backButtonText: {
     fontSize: 16,
-    color: '#8B4513',
     fontWeight: '600',
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
   },
   listContainer: {
     padding: 16,

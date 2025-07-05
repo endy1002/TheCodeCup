@@ -20,7 +20,7 @@ export const useAppStore = create((set, get) => ({
       try {
         await dataPersistenceService.saveFavorites(newFavorites);
       } catch (error) {
-        console.warn('Failed to save favorites:', error);
+        // Silent error handling
       }
     }
   },
@@ -32,7 +32,7 @@ export const useAppStore = create((set, get) => ({
     try {
       await dataPersistenceService.saveFavorites(newFavorites);
     } catch (error) {
-      console.warn('Failed to save favorites:', error);
+      // Silent error handling
     }
   },
   toggleFavorite: async (coffee) => {
@@ -58,7 +58,7 @@ export const useAppStore = create((set, get) => ({
     try {
       await dataPersistenceService.saveCartItems(newCartItems);
     } catch (error) {
-      console.warn('Failed to save cart items:', error);
+      // Silent error handling
     }
   },
   removeFromCart: async (id) => {
@@ -69,7 +69,7 @@ export const useAppStore = create((set, get) => ({
     try {
       await dataPersistenceService.saveCartItems(newCartItems);
     } catch (error) {
-      console.warn('Failed to save cart items:', error);
+      // Silent error handling
     }
   },
   clearCart: async () => {
@@ -78,7 +78,7 @@ export const useAppStore = create((set, get) => ({
     try {
       await dataPersistenceService.saveCartItems([]);
     } catch (error) {
-      console.warn('Failed to save cart items:', error);
+      // Silent error handling
     }
   },
   
@@ -288,17 +288,6 @@ export const useAppStore = create((set, get) => ({
       pendingFreeDrinks: newPendingFreeDrinks
     });
     
-    console.log(summaryMessage);
-    if (order.pointsEarned > 0) {
-      console.log(`💰 Earned ${order.pointsEarned} points from paid items`);
-    }
-    if (order.totalCups > 0) {
-      console.log(`☕ Earned ${order.totalCups} stamps from paid items`);
-    }
-    if (earnedFreeDrink) {
-      console.log('🎉 Earned a free drink with 8 stamps!');
-    }
-    
     await Promise.all([
       dataPersistenceService.saveCurrentOrders(newCurrentOrders),
       dataPersistenceService.saveOrderHistory(newOrderHistory),
@@ -375,7 +364,7 @@ export const useAppStore = create((set, get) => ({
     try {
       await dataPersistenceService.saveCartItems(newCartItems);
     } catch (error) {
-      console.warn('Failed to save cart items:', error);
+      // Silent error handling
     }
     
     return true;
@@ -421,8 +410,6 @@ export const useAppStore = create((set, get) => ({
     try {
       set({ isLoading: true });
       
-      console.log('🚀 Initializing Code Cup app...');
-      
       // Check if app needs initial data seeding (non-blocking)
       safeStorageOperation(
         () => dataPersistenceService.seedInitialData(),
@@ -447,17 +434,14 @@ export const useAppStore = create((set, get) => ({
           isLoading: false,
           isInitialized: true
         });
-        console.log('✅ App state loaded successfully');
       } else {
         // Use default state if loading fails
         set({ 
           isLoading: false, 
           isInitialized: true 
         });
-        console.log('📝 Using default app state (storage fallback)');
       }
     } catch (error) {
-      console.error('❌ Error initializing app:', error);
       // Always set initialized to true so app can function
       set({ 
         isLoading: false, 
@@ -481,41 +465,64 @@ export const useAppStore = create((set, get) => ({
 
     const result = await safeBatchStorageOperation(operations);
     
-    if (result.allSuccess) {
-      console.log('All app state saved successfully');
-    } else if (result.partialSuccess) {
-      console.warn(`Partial save success: ${result.successCount}/${result.totalOperations} items saved`);
-    } else {
-      console.error('Failed to save app state');
-    }
-    
     return result.partialSuccess; // Return true if at least some data was saved
   },
 
   // Clear all data (for logout/reset)
   clearAllData: async () => {
-    await dataPersistenceService.clearAllData();
-    
-    // Reset to default state
-    set({
-      cartItems: [],
-      favorites: [],
-      userProfile: {
-        name: 'Le Tan Nguyen Dat',
-        dateOfBirth: '2005-02-10',
-        phoneNumber: '12345',
-        email: 'Endy@apcs',
-        address: 'Tran Phu, Ho Chi Minh'
-      },
-      stamps: 0,
-      points: 0,
-      pointHistory: [],
-      pendingFreeDrinks: 0,
-      isSelectingFreeDrink: false,
-      currentOrders: [],
-      orderHistory: [],
-      isInitialized: false
-    });
+    try {
+      // Set loading state while clearing
+      set({ isLoading: true });
+      
+      await dataPersistenceService.clearAllData();
+      
+      // Reset to default state with proper initialization
+      set({
+        cartItems: [],
+        favorites: [],
+        userProfile: {
+          name: 'Le Tan Nguyen Dat',
+          dateOfBirth: '2005-02-10',
+          phoneNumber: '12345',
+          email: 'Endy@apcs',
+          address: 'Tran Phu, Ho Chi Minh'
+        },
+        stamps: 0,
+        points: 0,
+        pointHistory: [],
+        pendingFreeDrinks: 0,
+        isSelectingFreeDrink: false,
+        currentOrders: [],
+        orderHistory: [],
+        isLoading: false,
+        isInitialized: true // Keep initialized as true so app stays functional
+      });
+      
+      return true;
+    } catch (error) {
+      // Even if clearing fails, reset the app state
+      set({
+        cartItems: [],
+        favorites: [],
+        userProfile: {
+          name: 'Le Tan Nguyen Dat',
+          dateOfBirth: '2005-02-10',
+          phoneNumber: '12345',
+          email: 'Endy@apcs',
+          address: 'Tran Phu, Ho Chi Minh'
+        },
+        stamps: 0,
+        points: 0,
+        pointHistory: [],
+        pendingFreeDrinks: 0,
+        isSelectingFreeDrink: false,
+        currentOrders: [],
+        orderHistory: [],
+        isLoading: false,
+        isInitialized: true
+      });
+      return false;
+    }
   },
 
   // Export user data for backup

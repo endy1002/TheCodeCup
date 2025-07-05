@@ -18,9 +18,8 @@ export const useDataPersistence = () => {
       saveIntervalRef.current = setInterval(async () => {
         try {
           await saveAppState();
-          console.log('Auto-save completed');
         } catch (error) {
-          console.error('Auto-save failed:', error);
+          // Auto-save failed silently
         }
       }, 30000); // 30 seconds
     };
@@ -40,20 +39,17 @@ export const useDataPersistence = () => {
         nextAppState === 'active'
       ) {
         // App came to foreground
-        console.log('App came to foreground - starting auto-save');
         startAutoSave();
       } else if (
         appState.current === 'active' &&
         nextAppState.match(/inactive|background/)
       ) {
         // App went to background - save data immediately
-        console.log('App went to background - saving data');
         stopAutoSave();
         try {
           await saveAppState();
-          console.log('Background save completed');
         } catch (error) {
-          console.error('Background save failed:', error);
+          // Background save failed silently
         }
       }
 
@@ -79,14 +75,8 @@ export const useDataPersistence = () => {
   const forceSave = async () => {
     try {
       const success = await saveAppState();
-      if (success) {
-        console.log('Force save completed successfully');
-      } else {
-        console.warn('Force save completed with some failures');
-      }
       return success;
     } catch (error) {
-      console.error('Force save failed:', error);
       return false;
     }
   };

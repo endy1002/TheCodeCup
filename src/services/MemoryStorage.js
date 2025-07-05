@@ -9,7 +9,6 @@ class MemoryStorage {
       this.storage.set(key, value);
       return true;
     } catch (error) {
-      console.error('MemoryStorage setItem failed:', error);
       return false;
     }
   }
@@ -18,7 +17,6 @@ class MemoryStorage {
     try {
       return this.storage.get(key) || null;
     } catch (error) {
-      console.error('MemoryStorage getItem failed:', error);
       return null;
     }
   }
@@ -28,7 +26,6 @@ class MemoryStorage {
       this.storage.delete(key);
       return true;
     } catch (error) {
-      console.error('MemoryStorage removeItem failed:', error);
       return false;
     }
   }
@@ -38,7 +35,6 @@ class MemoryStorage {
       keys.forEach(key => this.storage.delete(key));
       return true;
     } catch (error) {
-      console.error('MemoryStorage multiRemove failed:', error);
       return false;
     }
   }
@@ -48,7 +44,6 @@ class MemoryStorage {
       this.storage.clear();
       return true;
     } catch (error) {
-      console.error('MemoryStorage clear failed:', error);
       return false;
     }
   }

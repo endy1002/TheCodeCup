@@ -28,31 +28,19 @@ class DataPersistenceService {
       try {
         const result = await robustStorage.setItem(key, value);
         if (result.success) {
-          // Only log memory storage in development mode to reduce noise
-          if (__DEV__ && result.method !== 'AsyncStorage') {
-            // Reduce frequency of memory storage logs
-            const shouldLog = Math.random() < 0.1 || key.includes('userProfile'); // Log 10% of operations or important keys
-            if (shouldLog) {
-              console.log(`💾 ${key} saved using ${result.method} (attempt ${attempt})`);
-            }
-          }
           return true;
         }
         
         if (attempt < this.retryAttempts) {
-          if (__DEV__) console.warn(`Retry ${attempt} for ${key} failed, attempting again...`);
           await new Promise(resolve => setTimeout(resolve, this.retryDelay));
         }
       } catch (error) {
-        if (__DEV__) console.error(`Storage operation failed for ${key} (attempt ${attempt}):`, error);
-        
         if (attempt < this.retryAttempts) {
           await new Promise(resolve => setTimeout(resolve, this.retryDelay));
         }
       }
     }
     
-    if (__DEV__) console.error(`All ${this.retryAttempts} attempts failed for ${key}`);
     return false;
   }
 
@@ -60,7 +48,6 @@ class DataPersistenceService {
     try {
       return await robustStorage.getItem(key, defaultValue);
     } catch (error) {
-      console.error(`Storage read failed for ${key}:`, error);
       return defaultValue;
     }
   }
@@ -70,7 +57,6 @@ class DataPersistenceService {
       const result = await robustStorage.removeItem(key);
       return result.success;
     } catch (error) {
-      console.error(`Storage remove failed for ${key}:`, error);
       return false;
     }
   }
@@ -203,20 +189,11 @@ class DataPersistenceService {
           failedOperations.push(name);
         }
       } catch (error) {
-        console.error(`Failed to save ${name}:`, error);
         failedOperations.push(name);
       }
     }
 
     const allSuccessful = failedOperations.length === 0;
-    
-    if (allSuccessful) {
-      if (__DEV__) console.log('✅ All app state saved successfully');
-    } else if (result.partialSuccess) {
-      console.warn(`⚠️ Partial save success: ${result.successCount}/${result.totalOperations} items saved`);
-    } else {
-      console.error('❌ Failed to save app state');
-    }
     
     // Return true if at least half the operations succeeded
     return successCount >= saveOperations.length / 2;
@@ -258,7 +235,6 @@ class DataPersistenceService {
         userPreferences
       };
     } catch (error) {
-      console.error('Error loading app state:', error);
       return null;
     }
   }
@@ -269,8 +245,6 @@ class DataPersistenceService {
       const isInitialized = await this.isAppInitialized();
       
       if (!isInitialized) {
-        if (__DEV__) console.log('🌱 Seeding initial app data...');
-        
         // Initial user profile
         const defaultProfile = {
           name: 'Le Tan Nguyen Dat',
@@ -306,13 +280,11 @@ class DataPersistenceService {
           this.setAppInitialized('1.0.0')
         ]);
 
-        console.log('✅ Initial data seeded successfully');
         return true;
       }
       
       return false; // Already initialized
     } catch (error) {
-      console.error('Error seeding initial data:', error);
       return false;
     }
   }
@@ -323,8 +295,6 @@ class DataPersistenceService {
       const lastVersion = await this.getLastAppVersion();
       
       if (lastVersion !== currentVersion) {
-        if (__DEV__) console.log(`📦 Migrating data from version ${lastVersion} to ${currentVersion}`);
-        
         // Add migration logic here for future app updates
         // For example:
         // if (lastVersion < '1.1.0') {
@@ -332,30 +302,20 @@ class DataPersistenceService {
         // }
         
         await this.setItem(STORAGE_KEYS.LAST_APP_VERSION, currentVersion);
-        console.log('✅ Data migration completed');
       }
     } catch (error) {
-      console.error('Error during data migration:', error);
+      // Migration failed silently
     }
   }
 
   // Clear all app data (for logout or reset)
   async clearAllData() {
     try {
-      console.log('🗑️ Starting complete data clearance...');
-      
       // Use the robust storage clear method that handles both AsyncStorage and memory
       const result = await robustStorage.clearAllAppData();
       
-      if (result.success) {
-        console.log('✅ All app data cleared successfully');
-      } else {
-        console.warn('⚠️ Some data may not have been cleared properly:', result.error);
-      }
-      
       return result.success;
     } catch (error) {
-      console.error('❌ Error clearing app data:', error);
       return false;
     }
   }
@@ -372,7 +332,6 @@ class DataPersistenceService {
       
       return JSON.stringify(exportData, null, 2);
     } catch (error) {
-      console.error('Error exporting user data:', error);
       return null;
     }
   }
@@ -389,13 +348,8 @@ class DataPersistenceService {
       // Save imported data
       const success = await this.saveAppState(importData);
       
-      if (success) {
-        console.log('User data imported successfully');
-      }
-      
       return success;
     } catch (error) {
-      console.error('Error importing user data:', error);
       return false;
     }
   }

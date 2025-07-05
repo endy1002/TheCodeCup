@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -11,14 +11,11 @@ import {
   Modal,
 } from 'react-native';
 import { useAppStore } from '../viewmodels/useCartViewModel';
-import robustStorage from '../services/RobustStorageService';
-import StorageDiagnostics from '../utils/StorageDiagnostics';
 
 const SettingsScreen = ({ navigation }) => {
   const [isExportModalVisible, setIsExportModalVisible] = useState(false);
   const [isImportModalVisible, setIsImportModalVisible] = useState(false);
   const [importData, setImportData] = useState('');
-  const [storageInfo, setStorageInfo] = useState(null);
   const { 
     clearAllData, 
     exportUserData, 
@@ -29,20 +26,6 @@ const SettingsScreen = ({ navigation }) => {
     stamps,
     orderHistory
   } = useAppStore();
-
-  useEffect(() => {
-    // Get storage information
-    const getStorageInfo = async () => {
-      const info = await robustStorage.getStorageHealth();
-      setStorageInfo(info);
-    };
-    
-    getStorageInfo();
-    
-    // Refresh storage info every 5 seconds
-    const interval = setInterval(getStorageInfo, 5000);
-    return () => clearInterval(interval);
-  }, []);
 
   const handleExportData = async () => {
     try {
@@ -133,93 +116,6 @@ const SettingsScreen = ({ navigation }) => {
 
   const dataSummary = getDataSummary();
 
-  const handleRetryStorage = async () => {
-    try {
-      // Import the storage service to test it
-      const robustStorage = (await import('../services/RobustStorageService')).default;
-      
-      Alert.alert(
-        'Testing Storage...',
-        'Attempting to reconnect to persistent storage...',
-        [{ text: 'OK' }]
-      );
-
-      const result = await robustStorage.retestAsyncStorage();
-      
-      if (result) {
-        Alert.alert(
-          'Success! 🎉',
-          'Persistent storage is now working! Your data will be saved between app sessions.',
-          [{ text: 'Great!' }]
-        );
-        
-        // Force save current data with new storage method
-        await handleSaveData();
-        
-        // Refresh storage info
-        getStorageInfo();
-      } else {
-        Alert.alert(
-          'Storage Still Unavailable',
-          'AsyncStorage is still not working. This is normal in simulators. Your app will continue using memory storage.',
-          [{ text: 'OK' }]
-        );
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to test storage: ' + error.message);
-    }
-  };
-
-  const handleRunDiagnostics = async () => {
-    Alert.alert(
-      'Running Storage Diagnostics...',
-      'This will test AsyncStorage functionality and provide recommendations.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Run Tests',
-          onPress: async () => {
-            try {
-              const results = await StorageDiagnostics.runDiagnostics();
-              const report = StorageDiagnostics.formatDiagnosticsReport(results);
-              
-              Alert.alert(
-                'Diagnostics Complete',
-                'Would you like to view the detailed report?',
-                [
-                  { text: 'Later', style: 'cancel' },
-                  {
-                    text: 'View Report',
-                    onPress: () => {
-                      Alert.alert('Storage Diagnostics Report', report, [
-                        {
-                          text: 'Share Report',
-                          onPress: () => {
-                            Share.share({
-                              message: report,
-                              title: 'Storage Diagnostics Report'
-                            });
-                          }
-                        },
-                        { text: 'Close' }
-                      ]);
-                    }
-                  }
-                ]
-              );
-              
-              // Clean up diagnostic data
-              await StorageDiagnostics.clearDiagnosticData();
-              
-            } catch (error) {
-              Alert.alert('Diagnostics Failed', error.message);
-            }
-          }
-        }
-      ]
-    );
-  };
-
   const handleClearDataForLogin = () => {
     Alert.alert(
       'Switch User Session',
@@ -231,7 +127,6 @@ const SettingsScreen = ({ navigation }) => {
           style: 'destructive',
           onPress: async () => {
             try {
-              console.log('🔄 Clearing user session data...');
               await clearAllData();
               Alert.alert(
                 'Session Cleared', 
@@ -271,37 +166,6 @@ const SettingsScreen = ({ navigation }) => {
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Data & Settings</Text>
       
-      {/* Storage Status */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Storage Status</Text>
-        {storageInfo && (
-          <View style={styles.storageCard}>
-            <Text style={styles.storageText}>
-              Type: {storageInfo.type || 'Unknown'}
-            </Text>
-            <Text style={styles.storageText}>
-              AsyncStorage Available: {storageInfo.isAsyncStorageAvailable ? '✅ Yes' : '❌ No'}
-            </Text>
-            {storageInfo.type === 'MemoryStorage' && (
-              <>
-                <Text style={styles.storageText}>
-                  Memory Items: {storageInfo.memoryStoreSize}
-                </Text>
-                <Text style={styles.warningText}>
-                  ⚠️ Data will be lost when app is closed
-                </Text>
-                <TouchableOpacity 
-                  style={[styles.button, styles.recoveryButton]} 
-                  onPress={handleRetryStorage}
-                >
-                  <Text style={styles.buttonText}>🔄 Retry Persistent Storage</Text>
-                </TouchableOpacity>
-              </>
-            )}
-          </View>
-        )}
-      </View>
-
       {/* Data Summary */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Your Data Summary</Text>
@@ -351,26 +215,6 @@ const SettingsScreen = ({ navigation }) => {
         <TouchableOpacity style={[styles.button, styles.dangerButton]} onPress={handleClearData}>
           <Text style={[styles.buttonText, styles.dangerText]}>🗑️ Clear All Data</Text>
         </TouchableOpacity>
-
-        {/* Retry Storage Button - Only visible if AsyncStorage is not available */}
-        {!storageInfo?.isAsyncStorageAvailable && (
-          <TouchableOpacity style={styles.button} onPress={handleRetryStorage}>
-            <Text style={styles.buttonText}>🔄 Retry Storage</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-
-      {/* Storage Diagnostics */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Storage Diagnostics</Text>
-        
-        <TouchableOpacity style={[styles.button, styles.diagnosticsButton]} onPress={handleRunDiagnostics}>
-          <Text style={styles.buttonText}>🔍 Run Storage Tests</Text>
-        </TouchableOpacity>
-        
-        <Text style={styles.infoText}>
-          Run comprehensive tests to diagnose storage issues and get recommendations for improving data persistence.
-        </Text>
       </View>
 
       {/* Data Info */}

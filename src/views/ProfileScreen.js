@@ -39,7 +39,6 @@ export default function ProfileScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              console.log('🔄 Switching user - clearing all data...');
               await clearAllData();
               Alert.alert(
                 'Success', 
@@ -58,7 +57,6 @@ export default function ProfileScreen() {
                 ]
               );
             } catch (error) {
-              console.error('Failed to switch user:', error);
               Alert.alert('Error', 'Failed to switch user: ' + error.message);
             }
           },
@@ -83,12 +81,6 @@ export default function ProfileScreen() {
           <Text style={[styles.headerTitle, { color: theme.text }]}>Profile</Text>
         </View>
         <View style={styles.headerRight}>
-          <TouchableOpacity 
-            style={styles.settingsButton}
-            onPress={() => navigation.navigate('Settings')}
-          >
-            <Text style={styles.settingsButtonText}>⚙️</Text>
-          </TouchableOpacity>
         </View>
       </View>
 
@@ -228,16 +220,6 @@ const styles = StyleSheet.create({
   backButtonText: {
     fontSize: 16,
     fontWeight: '600',
-  },
-  settingsButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 20,
-  },
-  settingsButtonText: {
-    fontSize: 20,
   },
   headerTitle: {
     fontSize: 20,
